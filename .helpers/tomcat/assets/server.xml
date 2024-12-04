@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Server port="-1">
+  <Listener className="org.apache.catalina.core.AprLifecycleListener" />
+  <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+  <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+  <Listener className="fr.univparis1.tomcat.EarlySessionsUnloadListener" />
+  
+  <Service name="Catalina" gracefulStopAwaitMillis="360000"> <!-- on laisse 1 heure aux reqs en cours pour terminer -->
+  
+    <!-- concernant le port d'écoute :
+       - bindOnInit="false" : permet un bind tard et release tôt
+       - bindOnInit="true" : permet un bind tôt mais release tard (alors que tomcat ne traitera plus les reqs) (default value)
+       - EarlyCloseHttp11NioProtocol : permet un bind tôt mais release tôt. Les reqs sont mises en attente que les webapps démarrent. On ne pert pas de requêtes !
+    -->
+    <Connector protocol="fr.univparis1.tomcat.EarlyCloseHttp11NioProtocol"
+        port="${http_port}"
+        maxPostSize="${maxPostSize}" maxParameterCount="${maxParameterCount}" />
+
+    <Engine name="Catalina" defaultHost="localhost">
+
+      <!-- pour tomcat manager (utilise tomcat-users.xml) -->
+      <Realm className="org.apache.catalina.realm.MemoryRealm" />
+
+      <!-- startStopThreads="0" pour déployer les webapps en parallèle en fonction du nombre de CPUs -->
+      <Host name="localhost" createDirs="false" unpackWARs="false" autoDeploy="false" startStopThreads="0">
+    	<Valve className="org.apache.catalina.valves.RemoteIpValve" internalProxies="${remoteIpInternalProxies}" />
+      </Host>
+    </Engine>
+  </Service>
+</Server>
