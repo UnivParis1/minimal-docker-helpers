@@ -103,6 +103,11 @@ for app in $apps; do
     # remove trailing slash
     app=${app%/}
 
+    if [ -e $app/IGNORE ]; then
+        echo "$app ignoré (supprimer le fichier $app/IGNORE pour réactiver)"
+        continue
+    fi
+
     compute_FROM_up1_var $app
     if [ -z "$FROM_up1" ]; then
         # d'abord les applis/images sans parents up1-xxx
