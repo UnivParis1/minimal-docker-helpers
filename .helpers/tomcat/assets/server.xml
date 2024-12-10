@@ -15,7 +15,7 @@
     -->
     <Connector protocol="fr.univparis1.tomcat.EarlyCloseHttp11NioProtocol"
         port="${http_port}"
-        maxPostSize="${maxPostSize}" maxParameterCount="${maxParameterCount}" />
+        maxHttpHeaderSize="${maxHttpHeaderSize}" maxPostSize="${maxPostSize}" maxParameterCount="${maxParameterCount}" />
 
     <Engine name="Catalina" defaultHost="localhost">
 
