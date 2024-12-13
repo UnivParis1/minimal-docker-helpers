@@ -112,6 +112,7 @@ compute_docker_run_opts() {
 # variables gérés :
 # - $ro_vols : contient les fichiers de l'hote à rendre visible read-only
 # - $rw_vols : contient les fichiers de l'hote à rendre visible read-write
+# - $network_driver : par défaut le driver "host" est utilisé
 # - $opts : options diverses
 _docker_run() {
 
@@ -130,7 +131,10 @@ _docker_run() {
   may_configure_rsyslog_and_logrotate
   opts="--log-driver syslog --log-opt tag={{.Name}}:docker:{{.ID}}: $opts"
 
-  opts="--network host $opts"
+  if [ -z "$network_driver" ]; then
+    network_driver=host
+  fi
+  opts="--network $network_driver $opts"
   opts="--detach --restart unless-stopped $opts"
 
   compute_docker_run_opts
