@@ -38,6 +38,25 @@ compute_run_file_var() {
     fi
 }
 
+apply_rights() {
+    chmod 700 .git
+    chmod 750 $1
+    if [ -e $1/IGNORE ]; then
+        # l'utilisateur n'existe sûrement pas => pas de chgrp du répertoire, mais le chmod 750 est suffisant
+        :
+    elif [ -e $1/default-run.sh ]; then
+        :
+    elif [ -e $1/Dockerfile -o -e $1/run.sh ]; then
+        user=${1%--*}
+        chgrp $user $1
+        for i in Dockerfile etc; do
+            if [ -e $1/$i ]; then
+                chown -R $user $1/$i
+            fi
+        done
+    fi
+}
+
 _may_build_pull_run() {
     compute_FROM_up1_var $1
     compute_run_file_var $1
@@ -80,6 +99,7 @@ case $1 in
     build-run) want_build=1; want_run=1 ;;
     run-tail) want_build=1; want_run=1 ;;
     upgrade) want_build=1; want_pull=1; want_run=1; want_upgrade=1 ;;
+    rights) ;;
     *) _usage ;;
 esac
 shift
@@ -102,6 +122,8 @@ cd /opt/dockers
 for app in $apps; do
     # remove trailing slash
     app=${app%/}
+
+    apply_rights $app
 
     if [ -e $app/IGNORE ]; then
         echo "$app ignoré (supprimer le fichier $app/IGNORE pour réactiver)"
