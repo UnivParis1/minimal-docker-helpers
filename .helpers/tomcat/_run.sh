@@ -2,7 +2,7 @@
 
 set -o errexit
 
-[ -n "$port" ] || { echo "util-run-tomcat must sourced in another shell script"; exit 1; }
+[ -n "$port" ] || { echo ".helpers/tomcat/_run.sh is expecting 'port'"; exit 1; }
 
 . .helpers/lib-run.sh
 _compute_default_vars
