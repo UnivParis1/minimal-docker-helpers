@@ -22,7 +22,7 @@ fi
 rw_vols="$rw_vols $logdir $tomcat_logdir:/usr/local/tomcat/logs"
 install -d -o $user -g adm -m 770 $tomcat_logdir
 
-assets=/root/dockers/.helpers/tomcat/assets
+assets=/opt/dockers/.helpers/tomcat/assets
 
 webapps="$webapps $assets/tomcat-monitor.war"
 for webapp in $webapps; do

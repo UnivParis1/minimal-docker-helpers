@@ -4,14 +4,14 @@
 # - $container_name
 # - $0
 # variables ajoutées si vides :
-# - $app_build_dir : répertoire /root/docker/xxx/
+# - $app_build_dir : répertoire /otp/dockers/xxx/
 # - $container_name : noms du conteneur docker
 # - $image : image docker à utiliser
 # - $user : utilisateurs applicatifs possédant les fichiers
 # - $logdir : répertoire conseillé pour mettre les logs
 _compute_default_vars() {
     if [ -n "$container_name" ]; then
-        app_build_dir=/root/dockers/$container_name
+        app_build_dir=/opt/dockers/$container_name
     else
         app_build_dir=${0%/run.sh}
         container_name=${app_build_dir#*/}
@@ -80,13 +80,13 @@ may_configure_rsyslog_and_logrotate() {
   rsyslog_conf_file=/etc/rsyslog.d/docker-containers-separate-files.conf
   if [ ! -e $rsyslog_conf_file ]; then
     echo "Installing $rsyslog_conf_file and restarting rsyslog"
-    ln -s /root/dockers/.helpers/various/rsyslog.conf $rsyslog_conf_file
+    ln -s /opt/dockers/.helpers/various/rsyslog.conf $rsyslog_conf_file
     systemctl restart rsyslog
   fi
   logrotate_conf_file=/etc/logrotate.d/docker-containers.conf
   if [ ! -e $logrotate_conf_file ]; then
     echo "Installing $logrotate_conf_file"
-    ln -s /root/dockers/.helpers/various/logrotate.conf $logrotate_conf_file
+    ln -s /opt/dockers/.helpers/various/logrotate.conf $logrotate_conf_file
   fi
 }
 

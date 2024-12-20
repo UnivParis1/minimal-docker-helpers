@@ -97,7 +97,7 @@ else
     _usage
 fi
 
-cd /root/dockers
+cd /opt/dockers
 
 for app in $apps; do
     # remove trailing slash
