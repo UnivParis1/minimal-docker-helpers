@@ -24,7 +24,14 @@ _compute_default_vars() {
     fi
 
     if [ -z "$user" ]; then
-        user=$container_name
+        # le format du nom de container est "user" ou "user--xxx"
+        user=${container_name%--*}
+    fi
+    if [ -z "$subdir" ]; then
+        local subdir_=${container_name#*--}
+        if [ $subdir_ != $container_name ]; then
+            subdir=$subdir_
+        fi
     fi
     # convention : l'appli met ses fichiers de logs dans /var/log/xxx/ et les logs tomcat sont mis dans /var/log/xxx/tomcat/
     if [ -z "$logdir" ]; then
