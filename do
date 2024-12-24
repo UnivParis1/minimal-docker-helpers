@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -10,7 +10,15 @@ _build() {
         opts=""
         echo "Building image up1-$1"
     fi
-    docker build $opts -t up1-$1 $1/ | grep '^Step '
+    set +e
+    set -o pipefail
+    docker build $opts -t up1-$1 $1/ | tee $1/build.log | grep '^Step '
+    if [ $? != 0 ]; then
+        cat $1/build.log
+        exit 1
+    fi
+    set -e
+    rm -f $1/build.log
 }
 
 compute_FROM_up1_var() {
