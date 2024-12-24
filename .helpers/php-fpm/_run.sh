@@ -11,11 +11,15 @@ if [ -z "$image" ]; then
 fi
 _handle_show_image_name "$@"
 
+if [ -z "$subdir" ]; then
+    subdir=www
+fi
+
 run_user=fpm
 run_group=$user
 
 ro_vols="$ro_vols /etc/shadow /usr/local/etc/ssl"
-rw_vols="$rw_vols /webhome/$user/www /var/run/mysqld"
+rw_vols="$rw_vols /webhome/$user/$subdir /var/run/mysqld"
 
 _may_rename_kill_or_rm QUIT
 if [ "$rc" = killed ]; then 
