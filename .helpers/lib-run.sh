@@ -13,7 +13,7 @@ _compute_default_vars() {
     if [ -n "$container_name" ]; then
         app_build_dir=/opt/dockers/$container_name
     else
-        app_build_dir=${0%/run.sh}
+        app_build_dir=${0%/run*.sh}
         container_name=${app_build_dir#*/}
     fi
 
@@ -131,6 +131,9 @@ docker_run_common() {
   fi
   opts="--network $network_driver $opts"
 
+  if [ -n "$workdir" ]; then
+    opts="$opts --workdir $workdir"
+  fi
 }
 
 # variables nécessaires :
@@ -155,4 +158,22 @@ _docker_run() {
   docker run $opts --name $container_name $image "$@" >/dev/null
   
   echo "Created $container_name ($image). Status: "`_container_status $container_name`
+}
+
+# variables nécessaires :
+# - $image
+# variables gérés :
+# - $ro_vols : contient les fichiers de l'hote à rendre visible read-only
+# - $rw_vols : contient les fichiers de l'hote à rendre visible read-write
+# - $network_driver : par défaut le driver "host" est utilisé
+# - $workdir : working directory
+# - $opts : options diverses
+_docker_runOnce() {
+  docker_run_common
+
+  opts="--interactive --tty --rm $opts"
+
+  compute_docker_run_opts
+
+  docker run $opts $image "$@"
 }
