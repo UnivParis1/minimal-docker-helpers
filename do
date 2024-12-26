@@ -36,12 +36,16 @@ compute_run_file_var() {
         run_file=$1/run.sh
     elif [ -n "$FROM_up1" ]; then
         run_file=$FROM_up1/default-run.sh
-        if [ ! -e $run_file ]; then
-            echo "no $1/run.sh and no $FROM_up1/default-run.sh"
+        if [ -e $1/runOnce.sh ]; then
+            run_file=""
+        elif [ ! -e $run_file ]; then
+            echo "no $1/run.sh and no $1/runOnce.sh and no $FROM_up1/default-run.sh"
             exit 1
         fi
+    elif [ -e $1/runOnce.sh ]; then
+        run_file=""
     else
-        echo "no $1/run.sh and no $FROM_up1/default-run.sh"
+        echo "no $1/run.sh and no $1/runOnce.sh and no $FROM_up1/default-run.sh"
         exit 1
     fi
 }
@@ -54,7 +58,7 @@ apply_rights() {
         :
     elif [ -e $1/default-run.sh ]; then
         :
-    elif [ -e $1/Dockerfile -o -e $1/run.sh ]; then
+    elif [ -e $1/Dockerfile -o -e $1/run.sh -o -e $1/runOnce.sh ]; then
         user=${1%--*}
         chgrp $user $1
         for i in Dockerfile etc; do
@@ -64,12 +68,13 @@ apply_rights() {
         done
         if [ ! -e /etc/sudoers.d/dockers-$user ]; then
             cat > /etc/sudoers.d/dockers-$user << EOS
-$user ALL=(root) NOPASSWD: /usr/bin/docker ps --filter name=$1
-$user ALL=(root) NOPASSWD: /usr/bin/docker exec -it $1 *
-$user ALL=(root) NOPASSWD: /usr/bin/docker exec $1 *
 $user ALL=(root) NOPASSWD: /opt/dockers/do build $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do build-run $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do run $1
+$user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $1 *
+$user ALL=(root) NOPASSWD: /usr/bin/docker ps --filter name=$1
+$user ALL=(root) NOPASSWD: /usr/bin/docker exec -it $1 *
+$user ALL=(root) NOPASSWD: /usr/bin/docker exec $1 *
 EOS
         fi
     fi
@@ -81,7 +86,7 @@ _may_build_pull_run() {
     if [ -n "$want_build" -a -e $1/Dockerfile ]; then
         _build $1
     fi
-    if [ -n "$want_pull" -a ! -e $1/Dockerfile ]; then
+    if [ -n "$want_pull" -a ! -e $1/Dockerfile -a -n "$run_file" ]; then
         # on utilise directement une image externe, sans la modifier.
         # on demande quelle est cette image (nécessite _handle_show_image_name dans run.sh)
         image=`./$run_file --show-image-name`
@@ -106,6 +111,7 @@ _usage() {
 usage: 
     $0 { upgrade | build | run | build-run } { --all | <app> ... }
     $0 { run | build-run } --logsf <app>
+    $0 runOnce <app> <args...>
 EOS
     exit 1
 }
@@ -117,10 +123,20 @@ case $1 in
     build-run) want_build=1; want_run=1 ;;
     run-tail) want_build=1; want_run=1 ;;
     upgrade) want_build=1; want_pull=1; want_run=1; want_upgrade=1 ;;
+    runOnce) want_runOnce=1 ;;
     rights) ;;
     *) _usage ;;
 esac
 shift
+
+cd /opt/dockers
+
+if [ -n "$want_runOnce" ]; then
+    app=$1
+    shift
+    $app/runOnce.sh "$@"
+    exit
+fi
 
 if [ "$1" = "--logsf" ]; then
     want_logsf=1
@@ -134,8 +150,6 @@ elif [ -n "$1" ]; then
 else
     _usage
 fi
-
-cd /opt/dockers
 
 for app in $apps; do
     # remove trailing slash
