@@ -19,9 +19,16 @@ Conventions :
 
 Ajout d'une application
 
-  * créer un utilisateur local dans /webhome/toto , compiler et déployer la webapp
-    * pour maven, le plus performant est `mvn prepare-package war:exploded` avec `<build> <finalName>../../webapps/ROOT</finalName>` dans pom.xml
-  * créer /opt/dockers/esup-pay/run.sh . Exemple minimal :
+  * créer un utilisateur local dans /webhome/toto , 
+  * créer /opt/dockers/toto/runOnce.sh . Exemple minimal :
+```
+image=maven:3-eclipse-temurin-17-alpine
+subdir=src
+. .helpers/_runOnce.sh
+```
+  * compiler et déployer la webapp
+    * pour maven, le plus performant est `sudo /opt/dockers/do runOnce toto mvn prepare-package war:exploded` avec `<build> <finalName>../../webapps/ROOT</finalName>` dans pom.xml
+  * créer /opt/dockers/toto/run.sh . Exemple minimal :
 ```
 #!/bin/sh
 port=8480
