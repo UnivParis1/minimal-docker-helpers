@@ -112,16 +112,7 @@ compute_docker_run_opts() {
   done
 }
 
-# variables nécessaires :
-# - $run_user/$run_group ou $user
-# - $container_name
-# - $image
-# variables gérés :
-# - $ro_vols : contient les fichiers de l'hote à rendre visible read-only
-# - $rw_vols : contient les fichiers de l'hote à rendre visible read-write
-# - $network_driver : par défaut le driver "host" est utilisé
-# - $opts : options diverses
-_docker_run() {
+docker_run_common() {
 
   # NB: /etc/passwd nécessaire à pas mal d'applis (esup-activ pour kadmin, FPM ?) car on utilise le $user de l'hôte
   ro_vols="$ro_vols /etc/passwd /etc/group /etc/timezone"
@@ -135,13 +126,28 @@ _docker_run() {
   # NB: "--user $run_user:$run_group" ne marche pas car c'est le /etc/passwd de l'image qui est utilisé
   opts="--user `id -u $run_user`:`id -g $run_group` $opts"
 
-  may_configure_rsyslog_and_logrotate
-  opts="--log-driver syslog --log-opt tag={{.Name}}:docker:{{.ID}}: $opts"
-
   if [ -z "$network_driver" ]; then
     network_driver=host
   fi
   opts="--network $network_driver $opts"
+
+}
+
+# variables nécessaires :
+# - $run_user/$run_group ou $user
+# - $container_name
+# - $image
+# variables gérés :
+# - $ro_vols : contient les fichiers de l'hote à rendre visible read-only
+# - $rw_vols : contient les fichiers de l'hote à rendre visible read-write
+# - $network_driver : par défaut le driver "host" est utilisé
+# - $opts : options diverses
+_docker_run() {
+  docker_run_common
+
+  may_configure_rsyslog_and_logrotate
+  opts="--log-driver syslog --log-opt tag={{.Name}}:docker:{{.ID}}: $opts"
+
   opts="--detach --restart unless-stopped $opts"
 
   compute_docker_run_opts
