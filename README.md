@@ -27,7 +27,9 @@ subdir=src
 . .helpers/_runOnce.sh
 ```
   * compiler et déployer la webapp
-    * pour maven, le plus performant est `sudo /opt/dockers/do runOnce toto mvn prepare-package war:exploded` avec `<build> <finalName>../../webapps/ROOT</finalName>` et `<plugin> <artifactId>maven-war-plugin</artifactId> <version>3.4.0</version> <configuration><outdatedCheckPath>/</outdatedCheckPath></configuration> </plugin>` dans pom.xml
+    * pour maven, le plus performant est `sudo /opt/dockers/do runOnce toto mvn prepare-package war:exploded` (pour les projets compliqués, utilisez plutôt https://stackoverflow.com/a/11134940/3005203 ) avec dans pom.xml :
+      * `<build> <finalName>../../webapps/ROOT</finalName>`
+      * `<plugin> <artifactId>maven-war-plugin</artifactId> <version>3.4.0</version> <configuration><outdatedCheckPath>/</outdatedCheckPath></configuration> </plugin>`
   * créer /opt/dockers/toto/run.sh . Exemple minimal :
 ```
 #!/bin/sh
