@@ -27,7 +27,9 @@ subdir=src
 . .helpers/_runOnce.sh
 ```
   * compiler et déployer la webapp
-    * pour maven, le plus performant est `sudo /opt/dockers/do runOnce toto mvn prepare-package war:exploded` avec `<build> <finalName>../../webapps/ROOT</finalName>` dans pom.xml
+    * pour maven, le plus performant est `sudo /opt/dockers/do runOnce toto mvn prepare-package war:exploded` (pour les projets compliqués, utilisez plutôt https://stackoverflow.com/a/11134940/3005203 ) avec dans pom.xml :
+      * `<build> <finalName>../../webapps/ROOT</finalName>`
+      * `<plugin> <artifactId>maven-war-plugin</artifactId> <version>3.4.0</version> <configuration><outdatedCheckPath>/</outdatedCheckPath></configuration> </plugin>`
   * créer /opt/dockers/toto/run.sh . Exemple minimal :
 ```
 #!/bin/sh
@@ -80,6 +82,35 @@ php_value[memory_limit] = 256M
 /opt/dockers/do build-run --logsf toto
 ```
 
+### spring-boot:run
+
+Avec les options suivantes, il est possible de démarrer un `mvn spring-boot:run` readonly après avoir fait `mvn compile` préalablement (avec `runOnce`) :
+
+```
+mvn -Dmaven.resources.skip=true -Dmaven.test.skip=true -Dspring-boot.build-info.skip=true -Dmaven.antrun.skip=true spring-boot:run
+```
+
+Exemple complet de `run.sh` :
+
+```
+image=maven:3-eclipse-temurin-17-alpine
+
+. .helpers/lib-run.sh
+_compute_default_vars
+_handle_show_image_name "$@"
+
+
+dir=/webhome/toto/
+ro_vols="$dir/.m2 $dir/src"
+
+# do not use default ENTRYPOINT
+opts="$opts --entrypoint="
+
+_may_stop_and_rm
+_docker_run mvn -f /webhome/toto/src/pom.xml -Dmaven.resources.skip=true -Dmaven.test.skip=true -Dspring-boot.build-info.skip=true -Dmaven.antrun.skip=true spring-boot:run
+```
+
+
 ## Ajout d'une version PHP-FPM
 
-S'inpirer de .helpers/php-fpm/example-php-fpm-8.2
+S'inspirer de .helpers/php-fpm/example-php-fpm-8.2
