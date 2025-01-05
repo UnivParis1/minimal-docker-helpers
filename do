@@ -62,8 +62,8 @@ apply_rights() {
                 chown -R $user $1/$i
             fi
         done
-        if [ ! -e /etc/sudoers.d/dockers-$user ]; then
-            cat > /etc/sudoers.d/dockers-$user << EOS
+        if [ ! -e /etc/sudoers.d/dockers-$1 ]; then
+            cat > /etc/sudoers.d/dockers-$1 << EOS
 $user ALL=(root) NOPASSWD: /opt/dockers/do build $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do build-run $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do run $1
