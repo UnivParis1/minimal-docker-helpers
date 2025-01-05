@@ -13,7 +13,7 @@ fi
 _handle_show_image_name "$@"
 
 if [ -z "$tomcat_logdir" ]; then
-    tomcat_logdir=/var/log/$user/tomcat
+    tomcat_logdir=$logdir/tomcat
 fi
 if [ -z "$remoteIpInternalProxies" ]; then
     remoteIpInternalProxies="127[.]0[.]0[.]1|0:0:0:0:0:0:0:1"
