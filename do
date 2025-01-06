@@ -89,8 +89,11 @@ _may_build_pull_run() {
         # on demande quelle est cette image (nécessite _handle_show_image_name dans run.sh)
         image=`./$run_file --show-image-name`
         if [ -n "$image" ]; then
-            echo "docker pull $image"
-            docker pull $image
+            if [ ${image#up1-} = $image ]; then
+                # ce n'est pas une image locale, on demande la dernière version (pour les rolling tags)
+                echo "docker pull $image"
+                docker pull $image
+            fi
         else
             echo "$run_file n' pas renvoyé d'image"
             exit 1
