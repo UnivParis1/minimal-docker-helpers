@@ -171,7 +171,10 @@ _docker_run() {
 _docker_runOnce() {
   docker_run_common
 
-  opts="--interactive --tty --rm $opts"
+  if [ -t 0 ]; then
+    opts="--interactive --tty --rm $opts"
+  fi
+  opts="--rm $opts"
 
   compute_docker_run_opts
 
