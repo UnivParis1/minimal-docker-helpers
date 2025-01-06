@@ -1,0 +1,108 @@
+function _comp_cmd_opt_dockers_do__add_apps()
+{
+    local file
+    for file in /opt/dockers/*; do
+        # on garde uniquement
+        # - les répertoires
+        # - où l'utilisateur a les droits (très utile qd appelé via sudo)
+        # - non ignorés
+        if [[ -d $file && -r $file && ! -e $file/IGNORE ]]; then
+            words="$words ${file##*/}"
+        fi
+    done  
+}
+
+function _comp_cmd_opt_dockers_do()
+{
+  local words
+  local cmd="${COMP_WORDS[1]}"
+  if [[ $COMP_CWORD = 1 ]]; then
+    words="upgrade build run build-run runOnce"
+  else
+    local first_arg="${COMP_WORDS[2]}"
+    case $cmd in
+      build | upgrade)
+        if [[ $first_arg == --all ]]; then
+            # pas d'autres paramètres possible
+            : 
+        else
+            if [[ $COMP_CWORD = 2 ]]; then
+                words="--all"
+            fi
+            _comp_cmd_opt_dockers_do__add_apps
+        fi
+        ;;
+      run | build-run)
+        if [[ $COMP_CWORD = 2 ]]; then
+            words="--all --logsf"
+            _comp_cmd_opt_dockers_do__add_apps
+        elif [[ $first_arg == --logsf ]]; then
+            if [[ $COMP_CWORD = 3 ]]; then
+                _comp_cmd_opt_dockers_do__add_apps
+            else
+                # pas d'autres paramètres possible
+                : 
+            fi
+        elif [[ $first_arg == --all ]]; then
+            # pas d'autres paramètres possible
+            : 
+        else
+            _comp_cmd_opt_dockers_do__add_apps
+        fi
+        ;;
+      runOnce)
+        if [[ $COMP_CWORD = 2 ]]; then
+            _comp_cmd_opt_dockers_do__add_apps
+        fi
+    esac
+  fi
+  local latest="${COMP_WORDS[$COMP_CWORD]}"
+  COMPREPLY=($(compgen -W "$words" -- $latest))
+  return 0
+}
+
+# cf le /etc/sudoers.d/dockers-xxx généré dans le programme "do"
+function _comp_cmd_sudo_opt_dockers_do()
+{
+  local words
+  local cmd="${COMP_WORDS[2]}"
+  if [[ $COMP_CWORD = 2 ]]; then
+    words="upgrade build run build-run runOnce"
+  else
+    case $cmd in
+      build | upgrade | run | build-run)
+        if [[ $COMP_CWORD = 3 ]]; then
+            _comp_cmd_opt_dockers_do__add_apps
+        fi
+        ;;
+      runOnce)
+        if [[ $COMP_CWORD = 3 ]]; then
+            _comp_cmd_opt_dockers_do__add_apps
+        fi
+    esac
+  fi
+  local latest="${COMP_WORDS[$COMP_CWORD]}"
+  COMPREPLY=($(compgen -W "$words" -- $latest))
+  return 0
+}
+
+
+if ! declare -F _comp_cmd_sudo > /dev/null; then
+    . /usr/share/bash-completion/completions/sudo
+fi
+if ! declare -F _comp_cmd_sudo > /dev/null; then
+    _comp_cmd_sudo() { _sudo; }
+fi
+
+function _comp_cmd_sudo_wrapper()
+{
+  if [[ $COMP_CWORD > 1 && ${COMP_WORDS[1]} == "/opt/dockers/do" ]]; then
+    _comp_cmd_sudo_opt_dockers_do
+  else
+    _comp_cmd_sudo
+  fi
+  return $?
+}
+
+complete -F _comp_cmd_opt_dockers_do /opt/dockers/do
+complete -F _comp_cmd_sudo_wrapper sudo

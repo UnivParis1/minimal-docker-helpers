@@ -79,6 +79,10 @@ EOS
       echo "Installing /opt/dockers/.helpers/various/git-hook-apply-rights in .git/hooks/post-rewrite"
       ln -s /opt/dockers/.helpers/various/git-hook-apply-rights .git/hooks/post-rewrite
     fi
+    if [ ! -e /etc/bash_completion.d/opt_dockers_do ]; then
+      echo "Installing /opt/dockers/.helpers/various/bash_autocomplete in /etc/bash_completion.d/opt_dockers_do"
+      ln -s /opt/dockers/.helpers/various/bash_autocomplete /etc/bash_completion.d/opt_dockers_do
+    fi
 }
 
 _may_build_pull_run() {
