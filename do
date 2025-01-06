@@ -74,6 +74,11 @@ $user ALL=(root) NOPASSWD: /usr/bin/docker exec $1 *
 EOS
         fi
     fi
+
+    if [ ! -e .git/hooks/post-rewrite ]; then
+      echo "Installing /opt/dockers/.helpers/various/git-hook-apply-rights in .git/hooks/post-rewrite"
+      ln -s /opt/dockers/.helpers/various/git-hook-apply-rights .git/hooks/post-rewrite
+    fi
 }
 
 _may_build_pull_run() {
@@ -144,6 +149,11 @@ if [ "$1" = "--logsf" ]; then
     shift
 fi
 
+if [ "$1" = "--quiet" ]; then
+    quiet=1
+    shift
+fi
+
 if [ "$1" = "--all" ]; then
     apps=*/
 elif [ -n "$1" ]; then
@@ -159,7 +169,9 @@ for app in $apps; do
     apply_rights $app
 
     if [ -e $app/IGNORE ]; then
-        echo "$app ignoré (supprimer le fichier $app/IGNORE pour réactiver)"
+        if [ -z "$quiet" ]; then
+            echo "$app ignoré (supprimer le fichier $app/IGNORE pour réactiver)"
+        fi
         continue
     fi
 
