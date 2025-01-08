@@ -18,6 +18,10 @@ fi
 if [ -z "$remoteIpInternalProxies" ]; then
     remoteIpInternalProxies="127[.]0[.]0[.]1|0:0:0:0:0:0:0:1"
 fi
+if [ -z "$maxActiveSessionsGoal" ]; then
+    # désactivé par défaut
+    maxActiveSessionsGoal=-1
+fi
 
 rw_vols="$rw_vols $logdir $tomcat_logdir:/usr/local/tomcat/logs"
 install -d -o $user -g adm -m 770 $tomcat_logdir
@@ -51,7 +55,7 @@ install -d -o $user -m 700 /var/lib/sessions-$user
 rw_vols="$rw_vols /var/lib/sessions-$user:/var/lib/sessions"
 
 
-export CATALINA_OPTS="-Dhttp_port=$port -DmaxPostSize=$maxPostSize -DmaxParameterCount=$maxParameterCount -Dmanager_password='$manager_password' -DremoteIpInternalProxies='$remoteIpInternalProxies' -Dorg.apache.catalina.session.StandardSession.ACTIVITY_CHECK=true"
+export CATALINA_OPTS="-Dhttp_port=$port -DmaxPostSize=$maxPostSize -DmaxParameterCount=$maxParameterCount -DmaxActiveSessionsGoal=$maxActiveSessionsGoal -Dmanager_password='$manager_password' -DremoteIpInternalProxies='$remoteIpInternalProxies' -Dorg.apache.catalina.session.StandardSession.ACTIVITY_CHECK=true"
 opts="$opts --env CATALINA_OPTS"
 
 

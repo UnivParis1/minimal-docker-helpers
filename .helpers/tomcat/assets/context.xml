@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context>
-    <Manager className="fr.univparis1.tomcat.EarlySessionsUnloadManager" pathname="/var/lib/sessions/" />
+    <Manager className="fr.univparis1.tomcat.EarlySessionsUnloadManager" pathname="/var/lib/sessions/" maxActiveSessionsGoal="${maxActiveSessionsGoal}" />
 </Context>
