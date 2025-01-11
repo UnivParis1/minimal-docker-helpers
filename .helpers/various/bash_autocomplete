@@ -12,6 +12,19 @@ function _comp_cmd_opt_dockers_do__add_apps()
     done  
 }
 
+function _comp_cmd_opt_dockers_do__runOnce() {
+    local index=$1
+    if [[ $COMP_CWORD = $index ]]; then
+        _comp_cmd_opt_dockers_do__add_apps
+    elif [[ $COMP_CWORD = $((index+1)) ]]; then
+        words="--cd <program> bash"
+    elif [[ $COMP_CWORD = $((index+2)) && ${COMP_WORDS[$((index+1))]} = --cd ]]; then
+        words="<dir|subdir> _"
+    elif [[ $COMP_CWORD = $((index+3)) && ${COMP_WORDS[$((index+1))]} = --cd ]]; then
+        words="<program> bash"
+    fi
+}
+
 function _comp_cmd_opt_dockers_do()
 {
   local words
@@ -51,9 +64,7 @@ function _comp_cmd_opt_dockers_do()
         fi
         ;;
       runOnce)
-        if [[ $COMP_CWORD = 2 ]]; then
-            _comp_cmd_opt_dockers_do__add_apps
-        fi
+        _comp_cmd_opt_dockers_do__runOnce 2
     esac
   fi
   local latest="${COMP_WORDS[$COMP_CWORD]}"
@@ -76,9 +87,7 @@ function _comp_cmd_sudo_opt_dockers_do()
         fi
         ;;
       runOnce)
-        if [[ $COMP_CWORD = 3 ]]; then
-            _comp_cmd_opt_dockers_do__add_apps
-        fi
+        _comp_cmd_opt_dockers_do__runOnce 3
     esac
   fi
   local latest="${COMP_WORDS[$COMP_CWORD]}"

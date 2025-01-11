@@ -8,10 +8,21 @@ _handle_show_image_name "$@"
 
 rw_vols=/webhome/$user
 
-if [ -n "$subdir" ]; then
-    workdir=/webhome/$user/$subdir
-else
-    workdir=/webhome/$user
+if [ "$1" = "--cd" ]; then
+    shift
+    subdir="$1"
+    shift
+fi
+
+case "$subdir" in
+    /*) workdir=$subdir ;;
+    ?*) workdir=/webhome/$user/$subdir ;;
+    *) workdir=/webhome/$user ;;
+esac
+
+if [ ! -e $workdir ]; then
+    echo "invalid workdir $workdir"
+    exit 1
 fi
 
 # do not use default ENTRYPOINT
