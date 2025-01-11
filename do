@@ -126,6 +126,11 @@ EOS
     exit 1
 }
 
+if [ "$EUID" -ne 0 ]; then
+  echo "Re-lancer avec sudo"
+  exit 1
+fi
+
 case $1 in
     build) want_build=1 ;;
     pull) want_pull=1 ;;
