@@ -1,0 +1,11 @@
+    <settings>
+     <proxies>
+        <proxy>
+          <active>true</active>
+          <protocol>http</protocol>
+          <host>proxy</host>
+          <port>3128</port>
+          <nonProxyHosts>univ-paris1.fr|pantheonsorbonne.fr</nonProxyHosts>
+        </proxy>
+      </proxies>
+    </settings>
