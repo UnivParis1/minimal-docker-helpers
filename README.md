@@ -8,6 +8,41 @@ https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-doc
 /opt/dockers/do upgrade --all
 ```
 
+## Détail des variables
+
+### en général dans run.sh et runOnce.sh
+
+  * `$opts` : options passés à docker run
+  * `$ro_vols` : volumes montés en lecture seule :
+    * `ro_vols=/webhome/foo` : monte /webhome/foo de l'hôte dans /webhome/foo dans le conteneur
+    * `ro_vols=/webhome/foo:/usr/local` : monte /webhome/foo de l'hôte dans /usr/local dans le conteneur
+  * `$rw_vols` : volumes montés en lecture/écriture (avec ou sans `:` comme `$ro_vols`)
+  * `$container_name` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un répertoire /opts/dockers/xxx
+  * `$image` : par défaut `up1-$container_name` pour les conteneurs ayant un Dockerfile
+  * `$user` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un $container_name `xxx--subdir` ou `xxx`
+  * `$subdir` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un $container_name `user--xxx` ou `xxx`
+  * `$logdir` : par défaut `/var/log/$container_name`
+  * `$run_user` : utilisateur de l'hôte qui fait tourner le conteneur. Par défaut `$user`
+  * `$run_group` : groupe de l'hôte qui fait tourner le conteneur. Par défaut `$user`
+  * `$network_driver` : passé à docker run. Par défaut `host`
+  * `$workdir` : passé à docker run
+  * `$use_http_proxy` : 
+    * `use_http_proxy=java` : configure http.proxyHost/http.proxyPort/https.proxyHost/https.proxyPort/http.nonProxyHosts via JDK_JAVA_OPTIONS
+    * `use_http_proxy=maven` : configure http.proxyHost/http.proxyPort/https.proxyHost/https.proxyPort/http.nonProxyHosts via /usr/share/maven/conf/settings.xml
+
+### Tomcat 
+
+NB : il faut utiliser `. ./.helpers/tomcat/_run.sh` dans run.sh
+
+  * `$port` : port http sur lequel tomcat doit écouter
+  * `$webapps` : liste de répertoires à utiliser comme webapps
+  * `$maxPostSize` `$maxParameterCount` : modifier les paramètres par défaut de Tomcat
+  * `$maxActiveSessionsGoal` : permet de limiter le nombre de sessions. Si le nombre de sessions dépasse ce nombre, les vieilles sessions sont supprimées. A utiliser avec précaution
+  * `$remoteIpInternalProxies` : par défaut autorise uniquement les frontaux localhost
+  * `$tomcat_logdir` : par défaut `$logdir/tomcat`
+  * `$manager_password` : active tomcat /manager et configure le mot de passe de l'utilisateur `manager` avec droits "manager-script,manager-gui"
+
+
 ## Ajout d'une application
 
 ### Tomcat
