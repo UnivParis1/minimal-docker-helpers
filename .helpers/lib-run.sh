@@ -134,6 +134,14 @@ docker_run_common() {
   if [ -n "$workdir" ]; then
     opts="$opts --workdir $workdir"
   fi
+
+  if [ "$use_http_proxy_for" = "maven" ]; then
+    ro_vols="$ro_vols /opt/dockers/.helpers/various/maven-proxy.univ-paris1.fr-settings.xml:/usr/share/maven/conf/settings.xml"
+  fi
+  if [ "$use_http_proxy_for" = "java" ]; then
+    export JDK_JAVA_OPTIONS="-Dhttp.proxyHost=proxy -Dhttps.proxyHost=proxy -Dhttp.proxyPort=3128 -Dhttps.proxyPort=3128 -Dhttp.nonProxyHosts='localhost|127.*|[::1]|*.univ-paris1.fr|*.pantheonsorbonne.fr'"
+    opts="$opts --env JDK_JAVA_OPTIONS"
+  fi
 }
 
 # variables nécessaires :
