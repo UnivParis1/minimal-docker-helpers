@@ -30,7 +30,7 @@ function _comp_cmd_opt_dockers_do()
   local words
   local cmd="${COMP_WORDS[1]}"
   if [[ $COMP_CWORD = 1 ]]; then
-    words="upgrade build run build-run runOnce rights"
+    words="upgrade build run build-run runOnce rights ps"
   else
     local first_arg="${COMP_WORDS[2]}"
     case $cmd in
@@ -65,6 +65,16 @@ function _comp_cmd_opt_dockers_do()
         ;;
       runOnce)
         _comp_cmd_opt_dockers_do__runOnce 2
+        ;;
+      ps)
+        if [[ $COMP_CWORD = 2 ]]; then
+            words="--all --quiet"
+            _comp_cmd_opt_dockers_do__add_apps
+        fi
+        if [[ $COMP_CWORD = 3 && $first_arg == --quiet ]]; then
+            words="--all"
+            _comp_cmd_opt_dockers_do__add_apps
+        fi
     esac
   fi
   local latest="${COMP_WORDS[$COMP_CWORD]}"

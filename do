@@ -2,6 +2,10 @@
 
 set -e
 
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 _build() {
     if [ -n "$want_upgrade" -a -z "$FROM_up1" ]; then
         opts="--pull --no-cache"
@@ -114,12 +118,23 @@ _may_build_pull_run() {
         # supprimer les anciens images/containers non utilisés
         docker system prune -f >/dev/null
     fi
+    if [ -n "$want_ps" -a -n "$run_file" ]; then
+        state=${states[$1]:-missing}
+        if [[ $state = running ]]; then
+            if [[ -z $quiet ]]; then
+                echo -e "$1 $GREEN${state}$NC"
+            fi
+        else
+            echo -e "$1 $RED${state^^}$NC"
+        fi
+    fi
+
 }
 
 _usage() {
     cat << EOS
 usage: 
-    $0 { upgrade | build | run | build-run | rights } { --all | <app> ... }
+    $0 { upgrade | build | run | build-run | rights | ps } { --all | <app> ... }
     $0 { run | build-run } --logsf <app>
     $0 runOnce <app> [--cd <dir|subdir>] <args...>
 EOS
@@ -140,11 +155,19 @@ case $1 in
     upgrade) want_build=1; want_pull=1; want_run=1; want_upgrade=1 ;;
     runOnce) want_runOnce=1 ;;
     rights) ;;
+    ps) want_ps=1 ;;
     *) _usage ;;
 esac
 shift
 
 cd /opt/dockers
+
+if [ -n "$want_ps" ]; then
+    declare -A states
+    while IFS=' ' read state name; do
+        states[$name]=$state
+    done <<< $(docker ps -a --format "{{.State}} {{.Names}}")
+fi
 
 if [ -n "$want_runOnce" ]; then
     app=$1
@@ -163,7 +186,7 @@ if [ "$1" = "--quiet" ]; then
     shift
 fi
 
-if [ "$1" = "--all" ]; then
+if [[ $1 = "--all" || -z $1 && -n $want_ps ]]; then
     apps=*/
 elif [ -n "$1" ]; then
     apps=$@
