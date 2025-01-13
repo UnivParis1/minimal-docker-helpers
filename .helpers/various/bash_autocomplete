@@ -30,11 +30,11 @@ function _comp_cmd_opt_dockers_do()
   local words
   local cmd="${COMP_WORDS[1]}"
   if [[ $COMP_CWORD = 1 ]]; then
-    words="upgrade build run build-run runOnce"
+    words="upgrade build run build-run runOnce rights"
   else
     local first_arg="${COMP_WORDS[2]}"
     case $cmd in
-      build | upgrade)
+      build | upgrade | rights)
         if [[ $first_arg == --all ]]; then
             # pas d'autres paramètres possible
             : 

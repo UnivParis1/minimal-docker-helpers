@@ -119,7 +119,7 @@ _may_build_pull_run() {
 _usage() {
     cat << EOS
 usage: 
-    $0 { upgrade | build | run | build-run } { --all | <app> ... }
+    $0 { upgrade | build | run | build-run | rights } { --all | <app> ... }
     $0 { run | build-run } --logsf <app>
     $0 runOnce <app> [--cd <dir|subdir>] <args...>
 EOS
