@@ -70,6 +70,8 @@ _may_rename_kill_or_rm() {
   
   if _container_exists $container_name; then
     if [ `_container_status $container_name` = "running" ]; then
+      # on s'assure que s'il ne termine pas, il ne sera pas redémarré au reboot
+      docker update --restart=no $container_name >/dev/null
       # on renomme le précédent containeur
       docker container rename $container_name $old_name
       # on lui dit de s'arrêter en continuant à traiter les requêtes en cours
