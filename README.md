@@ -106,12 +106,16 @@ Ajout d'une application
 FROM up1-php-fpm-8.2
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get install -y php-soap
-COPY etc /etc/
 ```
    * si besoin, créer /opt/dockers/toto/etc/fpm-pool-opts.conf . Exemple :
 ```
 php_value[memory_limit] = 256M
 ```
+et ajouter
+```
+COPY etc /etc/
+```
+dans /opt/dockers/toto/Dockerfile
    * créer et lancer le conteneur
 ```
 /opt/dockers/do build-run --logsf toto
