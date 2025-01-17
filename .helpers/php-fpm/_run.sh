@@ -18,8 +18,8 @@ fi
 run_user=fpm
 run_group=$user
 
-ro_vols="$ro_vols /etc/shadow /usr/local/etc/ssl"
-rw_vols="$rw_vols /webhome/$user/$subdir /var/run/mysqld"
+ro_vols="$ro_vols /usr/local/etc/ssl /var/run/mysqld"
+rw_vols="$rw_vols /webhome/$user/$subdir"
 
 _may_rename_kill_or_rm QUIT
 if [ "$rc" = killed ]; then 

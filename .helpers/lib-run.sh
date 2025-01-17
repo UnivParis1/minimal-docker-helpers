@@ -118,8 +118,7 @@ compute_docker_run_opts() {
 
 docker_run_common() {
 
-  # NB: /etc/passwd nécessaire à pas mal d'applis (esup-activ pour kadmin, FPM ?) car on utilise le $user de l'hôte
-  ro_vols="$ro_vols /etc/passwd /etc/group /etc/timezone"
+  ro_vols="$ro_vols /etc/timezone"
 
   if [ -z "$run_user" ]; then
     run_user=$user
@@ -163,6 +162,13 @@ docker_run_common() {
 # - $opts : options diverses
 _docker_run() {
   docker_run_common
+
+  dyn_dir=/opt/dockers/.run/$container_name/run
+  mkdir -p $dyn_dir/etc
+  # on fournit un /etc/passwd minimal (nécessaire pour les applis faisant un "getent hosts" de l'utilisateur $user)
+  egrep "^$run_user:" /etc/passwd > $dyn_dir/etc/passwd
+  egrep "^($run_user|$run_group):" /etc/group > $dyn_dir/etc/group
+  ro_vols="$ro_vols $dyn_dir/etc/passwd:/etc/passwd $dyn_dir/etc/group:/etc/group"
 
   may_configure_rsyslog_and_logrotate
   opts="--log-driver syslog --log-opt tag={{.Name}}:docker:{{.ID}}: $opts"
