@@ -101,12 +101,14 @@ may_configure_rsyslog_and_logrotate() {
 
 compute_docker_run_opts() {
   for vol in $ro_vols; do
+    if [ -n "$VERBOSE" ]; then echo "  using ro_vol $vol"; fi
     case $vol in
       *:*) opts="$opts --volume $vol:ro" ;;
       *) opts="$opts --volume $vol:$vol:ro" ;;
     esac
   done
   for vol in $rw_vols; do
+    if [ -n "$VERBOSE" ]; then echo "  using rw_vol $vol"; fi
     case $vol in
       *:*) opts="$opts --volume $vol" ;;
       *) opts="$opts --volume $vol:$vol" ;;
@@ -127,6 +129,10 @@ docker_run_common() {
   fi
   # NB: "--user $run_user:$run_group" ne marche pas car c'est le /etc/passwd de l'image qui est utilisé
   opts="--user `id -u $run_user`:`id -g $run_group` $opts"
+
+  if [ -n "$VERBOSE" ]; then
+    echo '  running as user "'$run_user'" & group "'$run_group'"'
+  fi
 
   if [ -z "$network_driver" ]; then
     network_driver=host

@@ -113,6 +113,7 @@ _may_build_pull_run() {
         fi
     fi
     if [ -n "$want_run" -a -n "$run_file" ]; then
+        if [[ -n $VERBOSE ]]; then echo "Running \"VERBOSE=1 ./$run_file $1\" :"; fi
         ./$run_file $1
 
         # supprimer les anciens images/containers non utilisés
@@ -190,6 +191,8 @@ if [[ $1 = "--all" || -z $1 && -n $want_ps ]]; then
     apps=*/
 elif [ -n "$1" ]; then
     apps=$@
+    # tell run.sh to be verbose
+    export VERBOSE=1
 else
     _usage
 fi
