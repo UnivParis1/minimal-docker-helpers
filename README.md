@@ -13,10 +13,10 @@ https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-doc
 ### en général dans run.sh et runOnce.sh
 
   * `$opts` : options passés à docker run
-  * `$ro_vols` : volumes montés en lecture seule :
+  * `$ro_vols` : répertoires montés en lecture seule :
     * `ro_vols=/webhome/foo` : monte /webhome/foo de l'hôte dans /webhome/foo dans le conteneur
     * `ro_vols=/webhome/foo:/usr/local` : monte /webhome/foo de l'hôte dans /usr/local dans le conteneur
-  * `$rw_vols` : volumes montés en lecture/écriture (avec ou sans `:` comme `$ro_vols`)
+  * `$rw_vols` : répertoires montés en lecture/écriture (avec ou sans `:` comme `$ro_vols`)
   * `$container_name` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un répertoire /opts/dockers/xxx
   * `$image` : par défaut `up1-$container_name` pour les conteneurs ayant un Dockerfile
   * `$user` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un $container_name `xxx--subdir` ou `xxx`
