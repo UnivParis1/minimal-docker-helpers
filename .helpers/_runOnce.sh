@@ -2,8 +2,6 @@
 
 . .helpers/lib-run--set-vars.sh
 
-[ -n "$image" ] || { echo ".helpers/_runOnce.sh is expecting 'image'"; exit 1; }
-
 rw_vols=$user_home
 
 if [ "$1" = "--cd" ]; then

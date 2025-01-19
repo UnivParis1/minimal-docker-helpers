@@ -152,6 +152,10 @@ compute_docker_run_opts() {
 }
 
 docker_run_common() {
+  if [ -z "$image" ]; then
+    echo "ERROR $container_name: missing Dockerfile or \"image=\" param in $action.env"
+    exit 1
+  fi
 
   ro_vols="$ro_vols /etc/timezone"
 
