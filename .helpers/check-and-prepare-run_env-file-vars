@@ -17,6 +17,16 @@ while (<$F>) {
         print "image='$1';\n";
     } elsif ($only_image) {
         # on ignore
+    } elsif ($ENV{base_dir} && m!^rw_vol=([\w./-]+)$!) {
+        my $mountpoint = $1;
+        check_canonicalized($mountpoint);
+        $mountpoint eq $ENV{base_dir} || startsWith($mountpoint, "$ENV{base_dir}/")
+            or fatal("rw_vol=$mountpoint n'est pas autorisé. Il faut $ENV{base_dir} ou un de ses sous-répertoires");
+        -e $mountpoint
+            or fatal("$mountpoint n'existe pas");
+        !$ENV{user} || file_owner($mountpoint) eq $ENV{user}
+            or fatal("$mountpoint doit appartenir à l'utilisateur $ENV{user}");
+        print qq(rw_vols="\$rw_vols $mountpoint";\n);
     } else {
         fatal("invalid line « $_ »");
     }
@@ -32,4 +42,22 @@ sub echo_error {
 sub fatal {
     print echo_error($_[0]), "\n";
     exit 1;
+}
+sub startsWith {
+    my ($string, $prefix) = @_;
+    rindex($string, $prefix, 0) == 0
+}
+sub canonicalize {
+    my ($d) = @_;
+    my $d2 = `readlink -f "$d"`;
+    chomp $d2;
+    $d2;
+}
+sub check_canonicalized {
+    my ($d) = @_;
+    my $d2 = canonicalize($d);
+    $d eq $d2 or fatal("$d n'est pas canonifié. Mettre $d2");
+}
+sub file_owner {
+    getpwuid((stat($_[0]))[4])
 }

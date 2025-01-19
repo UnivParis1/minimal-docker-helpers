@@ -16,6 +16,8 @@
 # - $image : si Dockerfile présent, nom de l'image construite pour le Dockerfile
 # - $subdir : calculé à partir du $container_name "<user>--<subdir>"
 # - $base_dir : calculé à partir de $base_dir_$template
+# variables parfois complétés
+# - $rw_vols : si configuré via "rw_vol=" dans run.env
 _compute_default_vars() {
     case $0 in
       *runOnce.sh) action=runOnce ;;
@@ -66,7 +68,7 @@ _compute_default_vars() {
     fi
 
     if [ -e $app_build_dir/$action.env ]; then
-        eval `/opt/dockers/.helpers/check-and-prepare-run_env-file-vars $app_build_dir/$action.env`
+        eval `user=$user base_dir=$base_dir /opt/dockers/.helpers/check-and-prepare-run_env-file-vars $app_build_dir/$action.env`
     fi
 }
 
