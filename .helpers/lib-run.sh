@@ -19,7 +19,7 @@ _compute_default_vars() {
         container_name=${app_build_dir#*/}
     fi
 
-    if [ -z "$image" ]; then
+    if [ "$action" = run -a -z "$image" ]; then
         if [ -e $app_build_dir/Dockerfile ]; then
             image=up1-$container_name
         fi
