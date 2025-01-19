@@ -3,6 +3,8 @@
 # variables gérés :
 # - $container_name
 # - $0
+# variables ajoutées :
+# - $action : "run" ou "runOnce"
 # variables ajoutées si vides :
 # - $app_build_dir : répertoire /otp/dockers/xxx/
 # - $container_name : noms du conteneur docker
@@ -13,6 +15,12 @@
 # - $image : si Dockerfile présent, nom de l'image construite pour le Dockerfile
 # - $subdir : calculé à partir du $container_name "<user>--<subdir>"
 _compute_default_vars() {
+    case $0 in
+      *runOnce.sh) action=runOnce ;;
+      *run.sh) action=run ;;
+      default) echo "unknown command $0"; exit 1 ;;
+    esac
+
     if [ -n "$container_name" ]; then
         app_build_dir=/opt/dockers/$container_name
     else
