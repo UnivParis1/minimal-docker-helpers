@@ -1,7 +1,6 @@
 #!/bin/sh
 
-. .helpers/lib-run.sh
-_compute_default_vars
+. .helpers/lib-run--set-vars.sh
 
 [ -n "$image" ] || { echo ".helpers/_runOnce.sh is expecting 'image'"; exit 1; }
 

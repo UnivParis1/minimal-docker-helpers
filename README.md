@@ -134,8 +134,7 @@ Exemple complet de `run.sh` :
 ```
 image=maven:3-eclipse-temurin-17-alpine
 
-. .helpers/lib-run.sh
-_compute_default_vars
+. .helpers/lib-run--set-vars.sh
 
 
 dir=/webhome/toto/
