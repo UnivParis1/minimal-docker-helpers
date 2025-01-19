@@ -1,0 +1,35 @@
+#!/usr/bin/perl -w
+use strict;
+
+my $only_image = $ARGV[0] eq '--only-image' && shift;
+
+my ($run_env_file) = @ARGV or die "usage: $ARGV .../run.env\n";
+
+open(my $F, '<', $run_env_file) or die;
+while (<$F>) {
+    chomp;
+    if (/^\s*#/ || /^\s*$/) {
+        # on ignore
+    } elsif (m!^image=([\w:./-]+)$!) {
+        if (!$only_image) {
+            print 'if [ -n "$image" ]; then ' . echo_error('"image=" ne doit pas utilisé quand on utilise Dockerfile') . "; fi;\n";
+        }
+        print "image='$1';\n";
+    } elsif ($only_image) {
+        # on ignore
+    } else {
+        fatal("invalid line « $_ »");
+    }
+}
+
+sub echo_error {
+    my ($msg) = @_;
+    $msg =~ s/'/'"'"'/g;
+    # will be interpreted by caller which is a shell
+    "echo 'ERROR $run_env_file: $msg'; exit 1";
+}
+
+sub fatal {
+    print echo_error($_[0]), "\n";
+    exit 1;
+}

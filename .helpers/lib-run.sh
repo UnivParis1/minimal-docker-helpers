@@ -30,9 +30,17 @@ _compute_default_vars() {
         container_name=${app_build_dir#*/}
     fi
 
-    if [ "$action" = run -a -z "$image" ]; then
-        if [ -e $app_build_dir/Dockerfile ]; then
-            image=up1-$container_name
+    if [ "$action" = run -a -e $app_build_dir/Dockerfile ]; then
+        if [ -n "$image" ]; then
+            echo "ERROR : $container_name utilise un Dockerfile, ne pas préciser d'image dans $action.sh"
+            exit 1
+        fi
+        image=up1-$container_name
+    else
+        if [ -n "$image" ]; then
+            echo "ERROR : le paramètre image= doit être mis dans $action.env"
+            echo "Pour migrer : cd /opt/dockers/$container_name && grep '^image=' $action.sh >> $action.env && perl -ni -e 'print if !/^image=/' $action.sh"
+            exit 1
         fi
     fi
 
@@ -56,13 +64,14 @@ _compute_default_vars() {
     if [ -z "$logdir" ]; then
         logdir=/var/log/$container_name
     fi
+
+    if [ -e $app_build_dir/$action.env ]; then
+        eval `/opt/dockers/.helpers/check-and-prepare-run_env-file-vars $app_build_dir/$action.env`
+    fi
 }
 
 _handle_show_image_name() {
-    if [ "$1" = "--show-image-name" ]; then
-        echo $image
-        exit
-    fi
+    echo "WARNING $container_name: you can now remove _handle_show_image_name from run.sh"
 }
 
 _may_stop_and_rm() {

@@ -61,7 +61,7 @@ apply_rights() {
     elif [ -e $1/Dockerfile -o -e $1/run.sh -o -e $1/runOnce.sh ]; then
         user=${1%--*}
         chgrp $user $1
-        for i in Dockerfile etc; do
+        for i in Dockerfile run.env etc; do
             if [ -e $1/$i ]; then
                 chown -R $user $1/$i
             fi
@@ -98,9 +98,10 @@ _may_build_pull_run() {
         _build $1
     fi
     if [ -n "$want_pull" -a ! -e $1/Dockerfile -a -n "$run_file" ]; then
-        # on utilise directement une image externe, sans la modifier.
-        # on demande quelle est cette image (nécessite _handle_show_image_name dans run.sh)
-        image=`./$run_file --show-image-name`
+        if [ -e $1/run.env ]; then
+            # on utilise directement une image externe, sans la modifier.
+            eval `.helpers/check-and-prepare-run_env-file-vars --only-image $1/run.env`
+        fi
         if [ -n "$image" ]; then
             if [ ${image#up1-} = $image ]; then
                 # ce n'est pas une image locale, on demande la dernière version (pour les rolling tags)
@@ -108,7 +109,7 @@ _may_build_pull_run() {
                 docker pull $image
             fi
         else
-            echo "$run_file n' pas renvoyé d'image"
+            echo "pas de Dockerfile et pas d'image dans run.env"
             exit 1
         fi
     fi

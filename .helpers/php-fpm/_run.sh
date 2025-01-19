@@ -6,8 +6,6 @@ set -o errexit
 . .helpers/lib-run.sh
 _compute_default_vars
 
-_handle_show_image_name "$@"
-
 if [ -z "$subdir" ]; then
     subdir=www
 fi

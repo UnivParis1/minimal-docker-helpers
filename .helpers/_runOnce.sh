@@ -2,7 +2,6 @@
 
 . .helpers/lib-run.sh
 _compute_default_vars
-_handle_show_image_name "$@"
 
 [ -n "$image" ] || { echo ".helpers/_runOnce.sh is expecting 'image'"; exit 1; }
 

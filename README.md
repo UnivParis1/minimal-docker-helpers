@@ -136,7 +136,6 @@ image=maven:3-eclipse-temurin-17-alpine
 
 . .helpers/lib-run.sh
 _compute_default_vars
-_handle_show_image_name "$@"
 
 
 dir=/webhome/toto/
