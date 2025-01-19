@@ -8,15 +8,11 @@ base_dir_template='$user_home/www'
 . .helpers/lib-run.sh
 _compute_default_vars
 
-if [ -z "$subdir" ]; then
-    subdir=www
-fi
-
 run_user=fpm
 run_group=$user
 
 ro_vols="$ro_vols /usr/local/etc/ssl /var/run/mysqld"
-rw_vols="$rw_vols /webhome/$user/$subdir"
+rw_vols="$rw_vols $base_dir"
 
 _may_rename_kill_or_rm QUIT
 if [ "$rc" = killed ]; then 
