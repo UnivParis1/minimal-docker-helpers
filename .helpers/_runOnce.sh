@@ -6,7 +6,7 @@ _handle_show_image_name "$@"
 
 [ -n "$image" ] || { echo ".helpers/_runOnce.sh is expecting 'image'"; exit 1; }
 
-rw_vols=/webhome/$user
+rw_vols=$user_home
 
 if [ "$1" = "--cd" ]; then
     shift
@@ -16,8 +16,8 @@ fi
 
 case "$subdir" in
     /*) workdir=$subdir ;;
-    ?*) workdir=/webhome/$user/$subdir ;;
-    *) workdir=/webhome/$user ;;
+    ?*) workdir=$user_home/$subdir ;;
+    *) workdir=$user_home ;;
 esac
 
 if [ ! -e $workdir ]; then
