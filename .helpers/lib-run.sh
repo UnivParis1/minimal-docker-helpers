@@ -6,9 +6,11 @@
 # variables ajoutées si vides :
 # - $app_build_dir : répertoire /otp/dockers/xxx/
 # - $container_name : noms du conteneur docker
-# - $image : image docker à utiliser
-# - $user : utilisateurs applicatifs possédant les fichiers
+# - $user : utilisateurs applicatifs possédant les fichiers. calculé à partir du $container_name "<user>--<subdir>"
 # - $logdir : répertoire conseillé pour mettre les logs
+# variables parfois ajoutées si vides :
+# - $image : si Dockerfile présent, nom de l'image construite pour le Dockerfile
+# - $subdir : calculé à partir du $container_name "<user>--<subdir>"
 _compute_default_vars() {
     if [ -n "$container_name" ]; then
         app_build_dir=/opt/dockers/$container_name
