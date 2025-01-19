@@ -27,6 +27,9 @@ while (<$F>) {
         !$ENV{user} || file_owner($mountpoint) eq $ENV{user}
             or fatal("$mountpoint doit appartenir à l'utilisateur $ENV{user}");
         print qq(rw_vols="\$rw_vols $mountpoint";\n);
+    } elsif (/^(maxPostSize|maxParameterCount|maxActiveSessionsGoal)=(-?\d+)$/ ||
+             /^(remoteIpInternalProxies)=([\d:.\[\]\(\)\|]+)$/) {
+        print "$1='$2';\n";
     } else {
         fatal("invalid line « $_ »");
     }
