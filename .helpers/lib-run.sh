@@ -18,7 +18,7 @@
 # - $base_dir : calculé à partir de $base_dir_$template
 # variables parfois complétés
 # - $rw_vols : si configuré via "rw_vol=" dans run.env
-_compute_default_vars() {
+_compute_default_vars_and_read_env() {
     case $0 in
       *runOnce.sh) action=runOnce ;;
       *run.sh) action=run ;;
@@ -70,6 +70,11 @@ _compute_default_vars() {
     if [ -e $app_build_dir/$action.env ]; then
         eval `user=$user base_dir=$base_dir /opt/dockers/.helpers/check-and-prepare-run_env-file-vars $app_build_dir/$action.env`
     fi
+}
+
+_compute_default_vars() {
+    _compute_default_vars_and_read_env
+    echo 'WARNING '$container_name': replace ". .helpers/lib-run.sh" + "_compute_default_vars" with ". .helpers/lib-run--set-vars.sh"'
 }
 
 _handle_show_image_name() {
