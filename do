@@ -174,7 +174,15 @@ fi
 if [ -n "$want_runOnce" ]; then
     app=$1
     shift
-    $app/runOnce.sh "$@"
+    runOnce_file=$app/runOnce.sh
+    if [ ! -e $runOnce_file ]; then
+        if [ -e $app/runOnce.env ]; then
+            runOnce_file=.helpers/_runOnce.sh
+        else
+            echo "ERROR: no runOnce.sh nor runOnce.env"
+        fi
+    fi
+    container_name=$app $runOnce_file "$@"
     exit
 fi
 
