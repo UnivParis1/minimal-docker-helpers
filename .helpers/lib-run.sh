@@ -3,6 +3,7 @@
 # variables gérés :
 # - $container_name
 # - $0
+# - $base_dir_template
 # variables ajoutées :
 # - $action : "run" ou "runOnce"
 # variables ajoutées si vides :
@@ -14,6 +15,7 @@
 # variables parfois ajoutées si vides :
 # - $image : si Dockerfile présent, nom de l'image construite pour le Dockerfile
 # - $subdir : calculé à partir du $container_name "<user>--<subdir>"
+# - $base_dir : calculé à partir de $base_dir_$template
 _compute_default_vars() {
     case $0 in
       *runOnce.sh) action=runOnce ;;
@@ -46,6 +48,9 @@ _compute_default_vars() {
     fi
     if [ -z "$user_home" ]; then
         user_home=`eval echo ~$user`
+    fi
+    if [ -z "$base_dir" -a -n "$base_dir_template" ]; then
+        base_dir=`eval echo $base_dir_template`
     fi
     # convention : l'appli met ses fichiers de logs dans /var/log/xxx/ et les logs tomcat sont mis dans /var/log/xxx/tomcat/
     if [ -z "$logdir" ]; then
