@@ -7,9 +7,6 @@ set -o errexit
 . .helpers/lib-run.sh
 _compute_default_vars
 
-if [ -z "$image" ]; then
-    image=tomcat:9-jre17
-fi
 _handle_show_image_name "$@"
 
 if [ -z "$tomcat_logdir" ]; then

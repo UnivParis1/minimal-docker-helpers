@@ -6,9 +6,6 @@ set -o errexit
 . .helpers/lib-run.sh
 _compute_default_vars
 
-if [ -z "$image" ]; then
-	image=up1-php-fpm-7.4
-fi
 _handle_show_image_name "$@"
 
 if [ -z "$subdir" ]; then
