@@ -3,6 +3,8 @@
 #set -x
 set -o errexit
 
+base_dir_template='$user_home/www'
+
 . .helpers/lib-run.sh
 _compute_default_vars
 
