@@ -7,6 +7,7 @@
 # - $app_build_dir : répertoire /otp/dockers/xxx/
 # - $container_name : noms du conteneur docker
 # - $user : utilisateurs applicatifs possédant les fichiers. calculé à partir du $container_name "<user>--<subdir>"
+# - $user_home : répertoire de l'utilisateur $user
 # - $logdir : répertoire conseillé pour mettre les logs
 # variables parfois ajoutées si vides :
 # - $image : si Dockerfile présent, nom de l'image construite pour le Dockerfile
@@ -34,6 +35,9 @@ _compute_default_vars() {
         if [ $subdir_ != $container_name ]; then
             subdir=$subdir_
         fi
+    fi
+    if [ -z "$user_home" ]; then
+        user_home=`eval echo ~$user`
     fi
     # convention : l'appli met ses fichiers de logs dans /var/log/xxx/ et les logs tomcat sont mis dans /var/log/xxx/tomcat/
     if [ -z "$logdir" ]; then
