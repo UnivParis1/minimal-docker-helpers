@@ -68,7 +68,7 @@ _compute_default_vars_and_read_env() {
     fi
 
     if [ -e $app_build_dir/$action.env ]; then
-        eval `user=$user base_dir=$base_dir /opt/dockers/.helpers/check-and-prepare-run_env-file-vars $app_build_dir/$action.env`
+        eval `action=$action user=$user base_dir=$base_dir /opt/dockers/.helpers/check-and-prepare-run_env-file-vars $app_build_dir/$action.env`
     fi
 }
 

@@ -30,6 +30,9 @@ while (<$F>) {
     } elsif (/^(maxPostSize|maxParameterCount|maxActiveSessionsGoal)=(-?\d+)$/ ||
              /^(remoteIpInternalProxies)=([\d:.\[\]\(\)\|]+)$/) {
         print "$1='$2';\n";
+    } elsif (m!^(subdir)=([\w./-]+)$!) {
+        $ENV{action} eq 'runOnce' or fatal("$1 only allowed in runOnce.env");
+        print "$1='$2';\n";
     } else {
         fatal("invalid line « $_ »");
     }
