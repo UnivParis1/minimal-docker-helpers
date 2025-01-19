@@ -57,4 +57,13 @@ opts="$opts --env CATALINA_OPTS"
 # (Tomcat utilise le shutdown hook mechanism de Java qui est déclenché par SIGTERM ou SIGINT ou SIGHUP)
 _may_rename_kill_or_rm TERM
 
+if [ -n "$VERBOSE" ]; then
+    echo "  using http_proxy $port"
+    if [ -n "$maxPostSize" ]; then echo "  using maxPostSize $maxPostSize"; fi
+    if [ -n "$maxParameterCount" ]; then echo "  using maxParameterCount $maxParameterCount"; fi
+    if [ -n "$maxActiveSessionsGoal" ]; then echo "  using maxActiveSessionsGoal $maxActiveSessionsGoal"; fi
+    if [ -n "$manager_password" ]; then echo "  using manager_password <hidden>"; fi
+    if [ -n "$remoteIpInternalProxies" ]; then echo "  using remoteIpInternalProxies $remoteIpInternalProxies"; fi
+fi
+
 _docker_run
