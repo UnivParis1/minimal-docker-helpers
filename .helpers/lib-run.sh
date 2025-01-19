@@ -232,6 +232,8 @@ _docker_run() {
 _docker_runOnce() {
   docker_run_common
 
+  ro_vols="$ro_vols /etc/passwd /etc/group"
+
   if [ -t 0 ]; then
     opts="--interactive --tty --rm $opts"
   fi
