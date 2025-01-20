@@ -25,11 +25,36 @@ _build() {
     rm -f $1/build.log
 }
 
+_build_runOnce() {
+    if [ -n "$want_upgrade" -a -z "$FROM_up1_runOnce" ]; then
+        opts="--pull --no-cache"
+        echo "Building image up1-once-$1 ($opts)"
+    else
+        opts=""
+        echo "Building image up1-once-$1"
+    fi
+    echo "building up1-once-$1"
+    set +e
+    set -o pipefail
+    docker build -f $1/runOnce.dockerfile $opts -t up1-once-$1 $1/ | tee $1/build-runOnce.log | grep '^Step '
+    if [ $? != 0 ]; then
+        cat $1/build-runOnce.log
+        exit 1
+    fi
+    set -e
+    rm -f $1/build-runOnce.log
+}
+
 compute_app_vars() {
     if [ -e $1/Dockerfile ]; then
         FROM_up1=`perl -lne 'print $1 if /^FROM up1-([\w:.-]+)/' $1/Dockerfile`
     else
         FROM_up1=
+    fi
+    if [ -e $1/runOnce.dockerfile ]; then
+        FROM_up1_runOnce=`perl -lne 'print $1 if /^FROM up1-([\w:.-]+)/' $1/runOnce.dockerfile`
+    else
+        FROM_up1_runOnce=
     fi
 
     if [ -e $1/default-run.sh ]; then
@@ -66,10 +91,10 @@ apply_rights() {
         :
     elif [ -e $1/default-run.sh ]; then
         :
-    elif [ -e $1/Dockerfile -o -e $1/run.sh -o -e $1/runOnce.sh ]; then
+    elif [ -e $1/Dockerfile -o -e $1/runOnce.dockerfile -o -e $1/run.env -o -e $1/runOnce.env ]; then
         user=${1%--*}
         chgrp $user $1
-        for i in Dockerfile run.env etc; do
+        for i in Dockerfile runeOnce.dockerfile run.env runOnce.env etc; do
             if [ -e $1/$i ]; then
                 chown -R $user $1/$i
             fi
@@ -116,8 +141,12 @@ _may_build_pull_run() {
     if [ -n "$want_build" -a -e $1/Dockerfile ]; then
         _build $1
     fi
+    if [ -n "$want_build_runOnce" -a -e $1/runOnce.dockerfile ]; then
+        _build_runOnce $1
+    fi
     if [[ -n $want_pull ]]; then
         may_read_env_and_may_pull $1/run.env
+        may_read_env_and_may_pull $1/runOnce.env
     fi
     if [ -n "$want_run" -a -n "$run_file" ]; then
         if [[ -n $VERBOSE ]]; then echo "Running \"VERBOSE=1 ./$run_file $1\" :"; fi
@@ -144,7 +173,7 @@ _usage() {
 usage: 
     $0 { upgrade | build | run | build-run | rights | ps } { --all | <app> ... }
     $0 { run | build-run } --logsf <app>
-    $0 runOnce <app> [--cd <dir|subdir>] <args...>
+    $0 { runOnce | build-runOnce } <app> [--cd <dir|subdir>] <args...>
 EOS
     exit 1
 }
@@ -160,8 +189,9 @@ case $1 in
     run) want_run=1 ;;
     build-run) want_build=1; want_run=1 ;;
     run-tail) want_build=1; want_run=1 ;;
-    upgrade) want_build=1; want_pull=1; want_run=1; want_upgrade=1 ;;
+    upgrade) want_build=1; want_build_runOnce=1; want_pull=1; want_run=1; want_upgrade=1 ;;
     runOnce) want_runOnce=1 ;;
+    build-runOnce) want_build_runOnce=1; want_runOnce=1 ;;
     rights) ;;
     ps) want_ps=1 ;;
     *) _usage ;;
@@ -217,8 +247,8 @@ for app in $apps; do
     fi
 
     compute_app_vars $app
-    
-    if [ -z "$FROM_up1" ]; then
+
+    if [[ -z $FROM_up1 && -z $FROM_up1_runOnce ]]; then
         # d'abord les applis/images sans parents up1-xxx
         apps_="$app $apps_ "
     else

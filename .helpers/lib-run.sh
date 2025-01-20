@@ -38,6 +38,12 @@ _compute_default_vars_and_read_env() {
             exit 1
         fi
         image=up1-$container_name
+    elif [ "$action" = runOnce -a -e $app_build_dir/runOnce.dockerfile ]; then
+        if [ -n "$image" ]; then
+            echo "ERROR : $container_name utilise un Dockerfile, ne pas préciser d'image dans $action.sh"
+            exit 1
+        fi
+        image=up1-once-$container_name
     else
         if [ -n "$image" ]; then
             echo "ERROR : le paramètre image= doit être mis dans $action.env"
