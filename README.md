@@ -22,7 +22,14 @@ https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-doc
 (modifiables par l'utilisateur applicatif)
 
   * `image` : par défaut `up1-$container_name` pour les conteneurs ayant un runOnce.dockerfile
-  * `$subdir` : utilisé comme répertoire de travail. Par défaut `xxx` pour un $container_name `user--xxx` ou `xxx`
+  * `subdir` : utilisé comme répertoire de travail. Par défaut `xxx` pour un $container_name `user--xxx` ou `xxx`
+
+### dans run.env et runOnce.env
+
+  * `use_http_proxy_*` : 
+    * `use_http_proxy_via=env` : configure les variables d'environnement http_proxy/https_proxy/no_proxy
+    * `use_http_proxy_for=java` : configure http.proxyHost/http.proxyPort/https.proxyHost/https.proxyPort/http.nonProxyHosts via JDK_JAVA_OPTIONS
+    * `use_http_proxy_for=maven` : configure http.proxyHost/http.proxyPort/https.proxyHost/https.proxyPort/http.nonProxyHosts via /usr/share/maven/conf/settings.xml
 
 ### dans run.sh et runOnce.sh
 
@@ -38,12 +45,8 @@ https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-doc
   * `$logdir` : par défaut `/var/log/$container_name`
   * `$run_user` : utilisateur de l'hôte qui fait tourner le conteneur. Par défaut `$user`
   * `$run_group` : groupe de l'hôte qui fait tourner le conteneur. Par défaut `$user`
-  * `$network_driver` : passé à docker run. Par défaut `host`
-  * `$workdir` : passé à docker run
-  * `$use_http_proxy_*` : 
-    * `use_http_proxy_via=env` : configure les variables d'environnement http_proxy/https_proxy/no_proxy
-    * `use_http_proxy_for=java` : configure http.proxyHost/http.proxyPort/https.proxyHost/https.proxyPort/http.nonProxyHosts via JDK_JAVA_OPTIONS
-    * `use_http_proxy_for=maven` : configure http.proxyHost/http.proxyPort/https.proxyHost/https.proxyPort/http.nonProxyHosts via /usr/share/maven/conf/settings.xml
+  * `$network_driver` : paramètre passé à docker run. Par défaut `host`
+  * `$workdir` : paramètre passé à docker run
 
 ### Tomcat 
 
