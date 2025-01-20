@@ -48,6 +48,14 @@ compute_app_vars() {
     else
         run_file=""
     fi
+
+    if [ -e $1/runOnce.sh ]; then
+        runOnce_file=$1/runOnce.sh
+    elif [ -e $1/runOnce.env ]; then
+        runOnce_file=.helpers/_runOnce.sh
+    else
+        runOnce_file=""
+    fi
 }
 
 apply_rights() {
@@ -168,21 +176,6 @@ if [ -n "$want_ps" ]; then
     done <<< $(docker ps -a --format "{{.State}} {{.Names}}")
 fi
 
-if [ -n "$want_runOnce" ]; then
-    app=$1
-    shift
-    runOnce_file=$app/runOnce.sh
-    if [ ! -e $runOnce_file ]; then
-        if [ -e $app/runOnce.env ]; then
-            runOnce_file=.helpers/_runOnce.sh
-        else
-            echo "ERROR: no runOnce.sh nor runOnce.env"
-        fi
-    fi
-    container_name=$app $runOnce_file "$@"
-    exit
-fi
-
 if [ "$1" = "--logsf" ]; then
     want_logsf=1
     shift
@@ -196,9 +189,15 @@ fi
 if [[ $1 = "--all" || -z $1 && -n $want_ps ]]; then
     apps=*/
 elif [ -n "$1" ]; then
-    apps=$@
-    # tell run.sh to be verbose
-    export VERBOSE=1
+    if [ -n "$want_runOnce" ]; then
+        app=$1
+        apps=$1
+        shift
+    else
+        apps=$@
+        # tell run.sh to be verbose
+        export VERBOSE=1
+    fi
 else
     _usage
 fi
@@ -229,6 +228,13 @@ done
 for app in $apps_; do
     _may_build_pull_run $app
 done
+if [ -n "$want_runOnce" ]; then
+    if [[ -z $runOnce_file ]]; then
+        echo "ERROR: no runOnce.sh nor runOnce.env"
+        exit 1
+    fi
+    container_name=$app $runOnce_file "$@"
+fi
 if [ -n "$want_logsf" ]; then
     exec docker logs -f $app
 fi
