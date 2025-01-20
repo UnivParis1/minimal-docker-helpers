@@ -97,26 +97,27 @@ EOS
     fi
 }
 
-_may_build_pull_run() {
-    compute_app_vars $1
-    if [ -n "$want_build" -a -e $1/Dockerfile ]; then
-        _build $1
-    fi
-    if [ -n "$want_pull" -a ! -e $1/Dockerfile -a -n "$run_file" ]; then
-        if [ -e $1/run.env ]; then
-            # on utilise directement une image externe, sans la modifier.
-            eval `.helpers/check-and-prepare-run_env-file-vars --only-image $1/run.env`
-        fi
+may_read_env_and_may_pull() {
+    if [[ -e $1 ]]; then
+        eval `.helpers/check-and-prepare-run_env-file-vars --only-image $1`
         if [ -n "$image" ]; then
             if [ ${image#up1-} = $image ]; then
                 # ce n'est pas une image locale, on demande la dernière version (pour les rolling tags)
                 echo "docker pull $image"
                 docker pull $image
             fi
-        else
-            echo "pas de Dockerfile et pas d'image dans run.env"
-            exit 1
         fi
+    fi
+}
+
+
+_may_build_pull_run() {
+    compute_app_vars $1
+    if [ -n "$want_build" -a -e $1/Dockerfile ]; then
+        _build $1
+    fi
+    if [[ -n $want_pull ]]; then
+        may_read_env_and_may_pull $1/run.env
     fi
     if [ -n "$want_run" -a -n "$run_file" ]; then
         if [[ -n $VERBOSE ]]; then echo "Running \"VERBOSE=1 ./$run_file $1\" :"; fi
