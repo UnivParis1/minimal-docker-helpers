@@ -25,15 +25,13 @@ _build() {
     rm -f $1/build.log
 }
 
-compute_FROM_up1_var() {
+compute_app_vars() {
     if [ -e $1/Dockerfile ]; then
         FROM_up1=`perl -lne 'print $1 if /^FROM up1-([\w:.-]+)/' $1/Dockerfile`
     else
         FROM_up1=
     fi
-}
 
-compute_run_file_var() {
     if [ -e $1/default-run.sh ]; then
         run_file=""
     elif [ -e $1/run.sh ]; then
@@ -92,8 +90,7 @@ EOS
 }
 
 _may_build_pull_run() {
-    compute_FROM_up1_var $app
-    compute_run_file_var $app
+    compute_app_vars $1
     if [ -n "$want_build" -a -e $1/Dockerfile ]; then
         _build $1
     fi
@@ -219,8 +216,7 @@ for app in $apps; do
         continue
     fi
 
-    compute_FROM_up1_var $app
-    compute_run_file_var $app
+    compute_app_vars $app
     
     if [ -z "$FROM_up1" ]; then
         # d'abord les applis/images sans parents up1-xxx
