@@ -264,6 +264,7 @@ if [ -n "$want_runOnce" ]; then
         echo "ERROR: no runOnce.sh nor runOnce.env"
         exit 1
     fi
+    if [[ -n $VERBOSE ]]; then echo "Running \"container_name=$app $runOnce_file $@\""; fi
     container_name=$app $runOnce_file "$@"
 fi
 if [ -n "$want_logsf" ]; then
