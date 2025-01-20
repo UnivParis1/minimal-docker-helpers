@@ -10,6 +10,11 @@ if [ "$1" = "--cd" ]; then
     shift
 fi
 
+if [ -z "$1" ]; then
+    echo "ERROR: pas de paramètre fournit à runOnce"
+    exit 1
+fi
+
 case "$subdir" in
     /*) workdir=$subdir ;;
     ?*) workdir=$user_home/$subdir ;;
