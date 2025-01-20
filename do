@@ -27,7 +27,7 @@ _build() {
 
 compute_FROM_up1_var() {
     if [ -e $1/Dockerfile ]; then
-        FROM_up1=`perl -lne 'print $1 if /^FROM up1-(\S+)/' $1/Dockerfile`
+        FROM_up1=`perl -lne 'print $1 if /^FROM up1-([\w:.-]+)/' $1/Dockerfile`
     else
         FROM_up1=
     fi
