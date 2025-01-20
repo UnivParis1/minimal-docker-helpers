@@ -28,7 +28,8 @@ while (<$F>) {
             or fatal("$mountpoint doit appartenir à l'utilisateur $ENV{user}");
         print qq(rw_vols="\$rw_vols $mountpoint";\n);
     } elsif (/^(maxPostSize|maxParameterCount|maxActiveSessionsGoal)=(-?\d+)$/ ||
-             /^(remoteIpInternalProxies)=([\d:.\[\]\(\)\|]+)$/) {
+             /^(remoteIpInternalProxies)=([\d:.\[\]\(\)\|]+)$/ ||
+             /^(use_http_proxy_for)=(java|maven)$/) {
         print "$1='$2';\n";
     } elsif (m!^(subdir)=([\w./-]+)$!) {
         $ENV{action} eq 'runOnce' or fatal("$1 only allowed in runOnce.env");
