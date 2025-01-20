@@ -40,7 +40,8 @@ https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-doc
   * `$run_group` : groupe de l'hôte qui fait tourner le conteneur. Par défaut `$user`
   * `$network_driver` : passé à docker run. Par défaut `host`
   * `$workdir` : passé à docker run
-  * `$use_http_proxy_for` : 
+  * `$use_http_proxy_*` : 
+    * `use_http_proxy_via=env` : configure les variables d'environnement http_proxy/https_proxy/no_proxy
     * `use_http_proxy_for=java` : configure http.proxyHost/http.proxyPort/https.proxyHost/https.proxyPort/http.nonProxyHosts via JDK_JAVA_OPTIONS
     * `use_http_proxy_for=maven` : configure http.proxyHost/http.proxyPort/https.proxyHost/https.proxyPort/http.nonProxyHosts via /usr/share/maven/conf/settings.xml
 
