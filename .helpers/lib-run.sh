@@ -142,6 +142,11 @@ may_configure_rsyslog_and_logrotate() {
 
 compute_docker_run_opts() {
   for vol in $ro_vols; do
+    if [ ! -e ${vol%:*} ]; then
+        # NB : si on laisse docker faire, il va auto-créer un répertoire vide avec owner "root"
+        echo 'ERROR $ro_vols '$vol" n'existe pas"
+        exit 1
+    fi
     if [ -n "$VERBOSE" ]; then echo "  using ro_vol $vol"; fi
     case $vol in
       *:*) opts="$opts --volume $vol:ro" ;;
@@ -149,6 +154,11 @@ compute_docker_run_opts() {
     esac
   done
   for vol in $rw_vols; do
+    if [ ! -e ${vol%:*} ]; then
+        # NB : si on laisse docker faire, il va auto-créer un répertoire vide avec owner "root"
+        echo 'ERROR $rw_vols '$vol" n'existe pas"
+        exit 1
+    fi
     if [ -n "$VERBOSE" ]; then echo "  using rw_vol $vol"; fi
     case $vol in
       *:*) opts="$opts --volume $vol" ;;
