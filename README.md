@@ -10,17 +10,31 @@ https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-doc
 
 ## Détail des variables
 
-### en général dans run.sh et runOnce.sh
+### dans run.env
+
+(modifiables par l'utilisateur applicatif)
+
+  * `image` : par défaut `up1-$container_name` pour les conteneurs ayant un Dockerfile
+  * `rw_vol` : (plusieurs lignes autorisées) répertoires montés en écriture (doivent être dans $base_dir)
+
+### dans runOnce.env
+
+(modifiables par l'utilisateur applicatif)
+
+  * `image` : par défaut `up1-$container_name` pour les conteneurs ayant un runOnce.dockerfile
+  * `$subdir` : utilisé comme répertoire de travail. Par défaut `xxx` pour un $container_name `user--xxx` ou `xxx`
+
+### dans run.sh et runOnce.sh
 
   * `$opts` : options passés à docker run
+  * `$base_dir` : autorise `rw_vol` dans run.env
+  * `$base_dir_template` : exemple `$base_dir_template='$user_home/www'`. Autorise `rw_vol` dans run.env
   * `$ro_vols` : répertoires montés en lecture seule :
     * `ro_vols=/webhome/foo` : monte /webhome/foo de l'hôte dans /webhome/foo dans le conteneur
     * `ro_vols=/webhome/foo:/usr/local` : monte /webhome/foo de l'hôte dans /usr/local dans le conteneur
   * `$rw_vols` : répertoires montés en lecture/écriture (avec ou sans `:` comme `$ro_vols`)
   * `$container_name` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un répertoire /opts/dockers/xxx
-  * `$image` : par défaut `up1-$container_name` pour les conteneurs ayant un Dockerfile
   * `$user` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un $container_name `xxx--subdir` ou `xxx`
-  * `$subdir` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un $container_name `user--xxx` ou `xxx`
   * `$logdir` : par défaut `/var/log/$container_name`
   * `$run_user` : utilisateur de l'hôte qui fait tourner le conteneur. Par défaut `$user`
   * `$run_group` : groupe de l'hôte qui fait tourner le conteneur. Par défaut `$user`
@@ -34,13 +48,18 @@ https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-doc
 
 NB : il faut utiliser `. ./.helpers/tomcat/_run.sh` dans run.sh
 
+dans run.sh :
+
   * `$port` : port http sur lequel tomcat doit écouter
   * `$webapps` : liste de répertoires à utiliser comme webapps
+  * `$tomcat_logdir` : par défaut `$logdir/tomcat`
+  * `$manager_password` : active tomcat /manager et configure le mot de passe de l'utilisateur `manager` avec droits "manager-script,manager-gui"
+
+dans run.env :
+
   * `$maxPostSize` `$maxParameterCount` : modifier les paramètres par défaut de Tomcat
   * `$maxActiveSessionsGoal` : permet de limiter le nombre de sessions. Si le nombre de sessions dépasse ce nombre, les vieilles sessions sont supprimées. A utiliser avec précaution
   * `$remoteIpInternalProxies` : par défaut autorise uniquement les frontaux localhost
-  * `$tomcat_logdir` : par défaut `$logdir/tomcat`
-  * `$manager_password` : active tomcat /manager et configure le mot de passe de l'utilisateur `manager` avec droits "manager-script,manager-gui"
 
 
 ## Ajout d'une application
@@ -55,11 +74,10 @@ Conventions :
 Ajout d'une application
 
   * créer un utilisateur local dans /webhome/toto , 
-  * créer /opt/dockers/toto/runOnce.sh . Exemple minimal :
+  * créer /opt/dockers/toto/runOnce.env . Exemple minimal :
 ```
 image=maven:3-eclipse-temurin-17-alpine
 subdir=src
-. .helpers/_runOnce.sh
 ```
   * compiler et déployer la webapp
     * pour maven, le plus performant est `sudo /opt/dockers/do runOnce toto mvn prepare-package war:exploded` (pour les projets compliqués, utilisez plutôt https://stackoverflow.com/a/11134940/3005203 ) avec dans pom.xml :
@@ -72,14 +90,23 @@ port=8480
 webapps=/webhome/toto/webapps/*
 . ./.helpers/tomcat/_run.sh
 ```
+  * créer /opt/dockers/toto/run.env . Exemple minimal :
+```
+image=tomcat:9-jre21
+```
   * exemple plus compliqué :
+
+run.env
+```
+image=maven:3-eclipse-temurin-17-alpine
+remoteIpInternalProxies="123[.]45[.]67[.]89"
+```
+run.sh
 ```
 #!/bin/sh
 
 port=8480
 webapps=/webhome/toto/webapps/*
-
-remoteIpInternalProxies="123[.]45[.]67[.]89"
 
 ro_vols="/etc/krb5.conf /usr/local/etc/ssl"
 rw_vols="/var/cache/toto"
@@ -129,11 +156,14 @@ Avec les options suivantes, il est possible de démarrer un `mvn spring-boot:run
 mvn -Dmaven.resources.skip=true -Dmaven.test.skip=true -Dspring-boot.build-info.skip=true -Dmaven.antrun.skip=true spring-boot:run
 ```
 
-Exemple complet de `run.sh` :
+Exemple complet :
 
+  * run.env
 ```
 image=maven:3-eclipse-temurin-17-alpine
-
+```
+  * run.sh
+```
 . .helpers/lib-run--set-vars.sh
 
 
