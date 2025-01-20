@@ -44,9 +44,11 @@ compute_run_file_var() {
             echo "no $1/run.sh and no $FROM_up1/default-run.sh"
             exit 1
         fi
-    else
-        echo "no $1/run.sh and no $FROM_up1/default-run.sh"
+    elif [ -e $1/run.env ]; then
+        echo "no $1/run.sh"
         exit 1
+    else
+        run_file=""
     fi
 }
 
@@ -90,10 +92,8 @@ EOS
 }
 
 _may_build_pull_run() {
-    if [[ ! $want_runOnce ]]; then
-        compute_FROM_up1_var $1
-        compute_run_file_var $1
-    fi
+    compute_FROM_up1_var $app
+    compute_run_file_var $app
     if [ -n "$want_build" -a -e $1/Dockerfile ]; then
         _build $1
     fi
@@ -220,6 +220,8 @@ for app in $apps; do
     fi
 
     compute_FROM_up1_var $app
+    compute_run_file_var $app
+    
     if [ -z "$FROM_up1" ]; then
         # d'abord les applis/images sans parents up1-xxx
         apps_="$app $apps_ "
