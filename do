@@ -106,6 +106,8 @@ $user ALL=(root) NOPASSWD: /opt/dockers/do build-run $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do run $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $1 *
+$user ALL=(root) NOPASSWD: /opt/dockers/do runOnce-run $1
+$user ALL=(root) NOPASSWD: /opt/dockers/do runOnce-run $1 *
 $user ALL=(root) NOPASSWD: /usr/bin/docker ps --filter name=$1
 $user ALL=(root) NOPASSWD: /usr/bin/docker exec -it $1 *
 $user ALL=(root) NOPASSWD: /usr/bin/docker exec $1 *
@@ -165,7 +167,7 @@ _usage() {
 usage: 
     $0 { upgrade | build | run | build-run | rights | ps } { --all | <app> ... }
     $0 { run | build-run } --logsf <app>
-    $0 { runOnce | build-runOnce } <app> [--cd <dir|subdir>] <args...>
+    $0 { runOnce | build-runOnce | runOnce-run } <app> [--cd <dir|subdir>] <args...>
 EOS
     exit 1
 }
@@ -184,6 +186,7 @@ case $1 in
     upgrade) want_build=1; want_build_runOnce=1; want_pull=1; want_run=1; want_upgrade=1 ;;
     runOnce) want_runOnce=1 ;;
     build-runOnce) want_build_runOnce=1; want_runOnce=1 ;;
+    runOnce-run) want_runOnce=1; want_run=1 ;;
     rights) ;;
     ps) want_ps=1 ;;
     *) _usage ;;
@@ -259,6 +262,14 @@ for app in $apps_; do
     if [[ -n $want_pull ]]; then
         _pull $app
     fi
+    if [ -n "$want_runOnce" ]; then
+        if [[ -z $runOnce_file ]]; then
+            echo "ERROR: no runOnce.sh nor runOnce.env"
+            exit 1
+        fi
+        if [[ -n $VERBOSE ]]; then echo "Running \"container_name=$app $runOnce_file $@\""; fi
+        container_name=$app $runOnce_file "$@"
+    fi
     if [ -n "$want_run" -a -n "$run_file" ]; then
         _run $app
     fi
@@ -266,14 +277,6 @@ for app in $apps_; do
         _ps $app
     fi
 done
-if [ -n "$want_runOnce" ]; then
-    if [[ -z $runOnce_file ]]; then
-        echo "ERROR: no runOnce.sh nor runOnce.env"
-        exit 1
-    fi
-    if [[ -n $VERBOSE ]]; then echo "Running \"container_name=$app $runOnce_file $@\""; fi
-    container_name=$app $runOnce_file "$@"
-fi
 if [ -n "$want_logsf" ]; then
     exec docker logs -f $app
 fi
