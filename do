@@ -104,6 +104,7 @@ apply_rights() {
 $user ALL=(root) NOPASSWD: /opt/dockers/do build $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do build-run $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do run $1
+$user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $1
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $1 *
 $user ALL=(root) NOPASSWD: /usr/bin/docker ps --filter name=$1
 $user ALL=(root) NOPASSWD: /usr/bin/docker exec -it $1 *

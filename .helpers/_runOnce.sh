@@ -11,8 +11,14 @@ if [ "$1" = "--cd" ]; then
 fi
 
 if [ -z "$1" ]; then
-    echo "ERROR: pas de paramètre fournit à runOnce"
-    exit 1
+    # gérer "cmd=xxx" dans runOnce.env
+    if [ -n "$cmd" ]; then
+        # set $@ from $cmd
+        set -- $cmd
+    else
+        echo "ERROR: pas de paramètre fournit à runOnce"
+        exit 1
+    fi
 fi
 
 case "$subdir" in

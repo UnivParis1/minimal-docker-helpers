@@ -23,6 +23,7 @@ https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-doc
 
   * `image` : par défaut `up1-$container_name` pour les conteneurs ayant un runOnce.dockerfile
   * `subdir` : utilisé comme répertoire de travail. Par défaut `xxx` pour un $container_name `user--xxx` ou `xxx`
+  * `cmd` : commande par défaut (si aucun paramètre)
 
 ### dans run.env et runOnce.env
 
@@ -82,9 +83,10 @@ Ajout d'une application
 ```
 image=maven:3-eclipse-temurin-17-alpine
 subdir=src
+cmd=mvn prepare-package war:exploded
 ```
   * compiler et déployer la webapp
-    * pour maven, le plus performant est `sudo /opt/dockers/do runOnce toto mvn prepare-package war:exploded` (pour les projets compliqués, utilisez plutôt https://stackoverflow.com/a/11134940/3005203 ) avec dans pom.xml :
+    * pour maven, le plus performant est `sudo /opt/dockers/do runOnce toto` (pour les projets compliqués, utilisez plutôt https://stackoverflow.com/a/11134940/3005203 ) avec dans pom.xml :
       * `<build> <finalName>../../webapps/ROOT</finalName>`
       * `<plugin> <artifactId>maven-war-plugin</artifactId> <version>3.4.0</version> <configuration><outdatedCheckPath>/</outdatedCheckPath></configuration> </plugin>`
   * créer /opt/dockers/toto/run.sh . Exemple minimal :
