@@ -136,6 +136,29 @@ may_read_env_and_may_pull() {
     fi
 }
 
+_pull() {
+    may_read_env_and_may_pull $1/run.env
+    may_read_env_and_may_pull $1/runOnce.env
+}
+
+_run() {
+    if [[ -n $VERBOSE ]]; then echo "Running \"VERBOSE=1 ./$run_file $1\" :"; fi
+    ./$run_file $1
+
+    # supprimer les anciens images/containers non utilisés
+    docker system prune -f >/dev/null
+}
+
+_ps() {
+    state=${states[$1]:-missing}
+    if [[ $state = running ]]; then
+        if [[ -z $quiet ]]; then
+            echo -e "$1 $GREEN${state}$NC"
+        fi
+    else
+        echo -e "$1 $RED${state^^}$NC"
+    fi
+}
 
 _may_build_pull_run() {
     compute_app_vars $1
@@ -146,25 +169,13 @@ _may_build_pull_run() {
         _build_runOnce $1
     fi
     if [[ -n $want_pull ]]; then
-        may_read_env_and_may_pull $1/run.env
-        may_read_env_and_may_pull $1/runOnce.env
+        _pull $1
     fi
     if [ -n "$want_run" -a -n "$run_file" ]; then
-        if [[ -n $VERBOSE ]]; then echo "Running \"VERBOSE=1 ./$run_file $1\" :"; fi
-        ./$run_file $1
-
-        # supprimer les anciens images/containers non utilisés
-        docker system prune -f >/dev/null
+        _run $1
     fi
     if [ -n "$want_ps" -a -n "$run_file" ]; then
-        state=${states[$1]:-missing}
-        if [[ $state = running ]]; then
-            if [[ -z $quiet ]]; then
-                echo -e "$1 $GREEN${state}$NC"
-            fi
-        else
-            echo -e "$1 $RED${state^^}$NC"
-        fi
+        _ps $1
     fi
 
 }
