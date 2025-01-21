@@ -159,7 +159,7 @@ dans /opt/dockers/toto/Dockerfile
 Avec les options suivantes, il est possible de démarrer un `mvn spring-boot:run` readonly après avoir fait `mvn compile` préalablement (avec `runOnce`) :
 
 ```
-mvn -Dmaven.resources.skip=true -Dmaven.test.skip=true -Dspring-boot.build-info.skip=true -Dmaven.antrun.skip=true spring-boot:run
+mvn --offline -Dmaven.resources.skip=true -Dmaven.test.skip=true -Dspring-boot.build-info.skip=true -Dmaven.antrun.skip=true spring-boot:run
 ```
 
 Exemple complet :
@@ -180,7 +180,7 @@ ro_vols="$dir/.m2 $dir/src"
 opts="$opts --entrypoint="
 
 _may_stop_and_rm
-_docker_run mvn -f /webhome/toto/src/pom.xml -Dmaven.resources.skip=true -Dmaven.test.skip=true -Dspring-boot.build-info.skip=true -Dmaven.antrun.skip=true spring-boot:run
+_docker_run mvn -f /webhome/toto/src/pom.xml --offline -Dmaven.resources.skip=true -Dmaven.test.skip=true -Dspring-boot.build-info.skip=true -Dmaven.antrun.skip=true spring-boot:run
 ```
 
 
