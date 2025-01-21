@@ -160,26 +160,6 @@ _ps() {
     fi
 }
 
-_may_build_pull_run() {
-    compute_app_vars $1
-    if [ -n "$want_build" -a -e $1/Dockerfile ]; then
-        _build $1
-    fi
-    if [ -n "$want_build_runOnce" -a -e $1/runOnce.dockerfile ]; then
-        _build_runOnce $1
-    fi
-    if [[ -n $want_pull ]]; then
-        _pull $1
-    fi
-    if [ -n "$want_run" -a -n "$run_file" ]; then
-        _run $1
-    fi
-    if [ -n "$want_ps" -a -n "$run_file" ]; then
-        _ps $1
-    fi
-
-}
-
 _usage() {
     cat << EOS
 usage: 
@@ -269,7 +249,22 @@ for app in $apps; do
 done
 
 for app in $apps_; do
-    _may_build_pull_run $app
+    compute_app_vars $app
+    if [ -n "$want_build" -a -e $app/Dockerfile ]; then
+        _build $app
+    fi
+    if [ -n "$want_build_runOnce" -a -e $app/runOnce.dockerfile ]; then
+        _build_runOnce $app
+    fi
+    if [[ -n $want_pull ]]; then
+        _pull $app
+    fi
+    if [ -n "$want_run" -a -n "$run_file" ]; then
+        _run $app
+    fi
+    if [ -n "$want_ps" -a -n "$run_file" ]; then
+        _ps $app
+    fi
 done
 if [ -n "$want_runOnce" ]; then
     if [[ -z $runOnce_file ]]; then
