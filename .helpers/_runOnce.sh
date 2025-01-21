@@ -35,4 +35,6 @@ fi
 # do not use default ENTRYPOINT
 opts="$opts --entrypoint="
 
+echo "Running $@ ($image)"
+
 _docker_runOnce "$@"
