@@ -27,7 +27,7 @@ while (<$F>) {
         !$ENV{user} || file_owner($mountpoint) eq $ENV{user}
             or fatal("$mountpoint doit appartenir à l'utilisateur $ENV{user}");
         print qq(rw_vols="\$rw_vols $mountpoint";\n);
-    } elsif (/^(maxPostSize|maxParameterCount|maxActiveSessionsGoal)=(-?\d+)$/ ||
+    } elsif (/^(maxHttpHeaderSize|maxPostSize|maxParameterCount|maxActiveSessionsGoal)=(-?\d+)$/ ||
              /^(remoteIpInternalProxies)=([\d:.\[\]\(\)\|]+)$/ ||
              /^(use_http_proxy_via)=(env)$/ ||
              /^(use_http_proxy_for)=(java|maven)$/) {
