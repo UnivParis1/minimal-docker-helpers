@@ -1,0 +1,19 @@
+#!/usr/bin/perl -w
+use strict;
+
+my %id2names;
+my @names;
+foreach (`docker images --no-trunc --format '{{.ID}} {{.Repository}}:{{.Tag}}'`) {
+    s/:latest$//; # on simplifie le nom
+    my ($id, $name) = split;
+    push @{$id2names{$id}}, $name;
+    push @names, $name;
+}
+
+foreach my $name (sort @names) {
+    if ($name =~ /^up1-/) {
+        my @ids = split " ", `docker history --no-trunc --quiet $name`;
+        my @parents = grep { $_ && $_ ne $name } map { @{$id2names{$_} || []} } @ids;
+        printf "%-30s %s\n", $name, join(' ', @parents);
+    }
+}
