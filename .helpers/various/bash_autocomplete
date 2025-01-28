@@ -1,105 +1,14 @@
-function _comp_cmd_opt_dockers_do__add_apps()
-{
-    local file
-    for file in /opt/dockers/*; do
-        # on garde uniquement
-        # - les répertoires
-        # - où l'utilisateur a les droits (très utile qd appelé via sudo)
-        # - non ignorés
-        if [[ -d $file && -r $file && ! -e $file/IGNORE ]]; then
-            words="$words ${file##*/}"
-        fi
-    done  
-}
-
-function _comp_cmd_opt_dockers_do__runOnce() {
-    local index=$1
-    if [[ $COMP_CWORD = $index ]]; then
-        _comp_cmd_opt_dockers_do__add_apps
-    elif [[ $COMP_CWORD = $((index+1)) ]]; then
-        words="--cd <program> bash"
-    elif [[ $COMP_CWORD = $((index+2)) && ${COMP_WORDS[$((index+1))]} = --cd ]]; then
-        words="<dir|subdir> _"
-    elif [[ $COMP_CWORD = $((index+3)) && ${COMP_WORDS[$((index+1))]} = --cd ]]; then
-        words="<program> bash"
-    fi
-}
-
 function _comp_cmd_opt_dockers_do()
 {
-  local words
-  local cmd="${COMP_WORDS[1]}"
-  if [[ $COMP_CWORD = 1 ]]; then
-    words="upgrade build run build-run runOnce build-runOnce runOnce-run rights ps"
-  else
-    local first_arg="${COMP_WORDS[2]}"
-    case $cmd in
-      build | upgrade | rights)
-        if [[ $first_arg == --all ]]; then
-            # pas d'autres paramètres possible
-            : 
-        else
-            if [[ $COMP_CWORD = 2 ]]; then
-                words="--all"
-            fi
-            _comp_cmd_opt_dockers_do__add_apps
-        fi
-        ;;
-      run | build-run)
-        if [[ $COMP_CWORD = 2 ]]; then
-            words="--all --logsf"
-            _comp_cmd_opt_dockers_do__add_apps
-        elif [[ $first_arg == --logsf ]]; then
-            if [[ $COMP_CWORD = 3 ]]; then
-                _comp_cmd_opt_dockers_do__add_apps
-            else
-                # pas d'autres paramètres possible
-                : 
-            fi
-        elif [[ $first_arg == --all ]]; then
-            # pas d'autres paramètres possible
-            : 
-        else
-            _comp_cmd_opt_dockers_do__add_apps
-        fi
-        ;;
-      runOnce | build-runOnce | runOnce-run)
-        _comp_cmd_opt_dockers_do__runOnce 2
-        ;;
-      ps)
-        if [[ $COMP_CWORD = 2 ]]; then
-            words="--all --quiet"
-            _comp_cmd_opt_dockers_do__add_apps
-        fi
-        if [[ $COMP_CWORD = 3 && $first_arg == --quiet ]]; then
-            words="--all"
-            _comp_cmd_opt_dockers_do__add_apps
-        fi
-    esac
-  fi
+  words=$(/opt/dockers/.helpers/various/bash_autocomplete.pl $COMP_CWORD "${COMP_WORDS[@]}")
   local latest="${COMP_WORDS[$COMP_CWORD]}"
   COMPREPLY=($(compgen -W "$words" -- $latest))
   return 0
 }
 
-# cf le /etc/sudoers.d/dockers-xxx généré dans le programme "do"
 function _comp_cmd_sudo_opt_dockers_do()
 {
-  local words
-  local cmd="${COMP_WORDS[2]}"
-  if [[ $COMP_CWORD = 2 ]]; then
-    words="upgrade build run build-run runOnce"
-  else
-    case $cmd in
-      build | upgrade | run | build-run)
-        if [[ $COMP_CWORD = 3 ]]; then
-            _comp_cmd_opt_dockers_do__add_apps
-        fi
-        ;;
-      runOnce | build-runOnce | runOnce-run)
-        _comp_cmd_opt_dockers_do__runOnce 3
-    esac
-  fi
+  words=$(/opt/dockers/.helpers/various/bash_autocomplete.pl $COMP_CWORD "${COMP_WORDS[@]}")
   local latest="${COMP_WORDS[$COMP_CWORD]}"
   COMPREPLY=($(compgen -W "$words" -- $latest))
   return 0
