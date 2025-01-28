@@ -286,9 +286,13 @@ sub ps_many {
 sub usage {
     die(<<"EOS");
 usage: 
-    $0 { upgrade | build | run | build-run | rights | ps } { --all | <app> ... }
-    $0 { run | build-run } --logsf <app>
+    $0 upgrade [--verbose] [<app> ...]
+    $0 pull [--only-run] { --all | <app> ... }
+    $0 build [--only-run] [--if-old] [--verbose] { --all | <app> ... }
+    $0 { run | build-run } [--if-old] [--verbose] [--logsf] { --all | <app> ... }
     $0 { runOnce | build-runOnce | runOnce-run } <app> [--cd <dir|subdir>] <args...>
+    $0 ps [--quiet] [--check-image-old] [<app> ... ]
+    $0 rights [--quiet] { --all | <app> ... }
 EOS
 }
 
@@ -302,7 +306,6 @@ my %actions = (
     'pull' => sub { $want_pull = $want_ps = $opts{check_image_old} = 1 },
     'run' => sub { $want_run = 1 },
     'build-run' => sub { $want_build = $want_run = 1 },
-    'run-tail' => sub { $want_build = $want_run = 1 },
     'upgrade' => sub { $want_build = $want_build_runOnce = $want_pull = $want_run = $want_upgrade = $opts{if_old} = $opts{only_run} = 1 },
     'runOnce' => sub { $want_runOnce = 1 },
     'build-runOnce' => sub { $want_build_runOnce = $want_runOnce = 1 },
@@ -329,7 +332,7 @@ while (1) {
 }
 
 my @apps;
-if (@ARGV ? $ARGV[0] eq "--all" : $want_ps) {
+if (@ARGV ? $ARGV[0] eq "--all" : $want_ps || $want_upgrade) {
     @apps = glob("*/");
 } elsif (@ARGV) {
     if ($want_runOnce) {

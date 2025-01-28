@@ -5,7 +5,7 @@ https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-doc
 ## Mise à jour des images et conteneurs
 
 ```
-/opt/dockers/do upgrade --all
+/opt/dockers/do upgrade
 ```
 
 ## Détail des variables
