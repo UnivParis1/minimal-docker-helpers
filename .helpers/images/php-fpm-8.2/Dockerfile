@@ -8,7 +8,10 @@ FROM debian:bookworm-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get upgrade -y && \
-  apt-get install -y php-fpm php-mbstring msmtp-mta
+  apt-get install -y php-fpm php-mbstring msmtp-mta locales && \
+  localedef -i fr_FR -c -f UTF-8 -A /usr/share/locale/locale.alias fr_FR.UTF-8
+# NB : on génère la locale française (comme expliqué ici https://hub.docker.com/_/debian ). On n'a pas trouvé d'applis en dépendant mais c'est plus sûr...
+ENV LANG fr_FR.UTF-8
 COPY etc /etc
 
 ENTRYPOINT ["php-fpm8.2"]
