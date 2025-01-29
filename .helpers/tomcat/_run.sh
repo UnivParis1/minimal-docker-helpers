@@ -49,7 +49,7 @@ install -d -o $user -m 700 /var/lib/sessions-$user
 rw_vols="$rw_vols /var/lib/sessions-$user:/var/lib/sessions"
 
 
-export CATALINA_OPTS="-Dhttp_port=$port -DmaxPostSize=$maxPostSize -DmaxParameterCount=$maxParameterCount -DmaxActiveSessionsGoal=$maxActiveSessionsGoal -Dmanager_password='$manager_password' -DremoteIpInternalProxies='$remoteIpInternalProxies' -Dorg.apache.catalina.session.StandardSession.ACTIVITY_CHECK=true"
+export CATALINA_OPTS="$CATALINA_OPTS -Dhttp_port=$port -DmaxPostSize=$maxPostSize -DmaxParameterCount=$maxParameterCount -DmaxActiveSessionsGoal=$maxActiveSessionsGoal -Dmanager_password='$manager_password' -DremoteIpInternalProxies='$remoteIpInternalProxies' -Dorg.apache.catalina.session.StandardSession.ACTIVITY_CHECK=true"
 opts="$opts --env CATALINA_OPTS"
 
 
