@@ -7,6 +7,7 @@
 FROM debian:bookworm-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
+RUN echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/No-Recommends
 RUN apt-get update && apt-get upgrade -y && \
   apt-get install -y php-fpm php-mbstring msmtp-mta locales && \
   localedef -i fr_FR -c -f UTF-8 -A /usr/share/locale/locale.alias fr_FR.UTF-8
