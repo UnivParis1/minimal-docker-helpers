@@ -89,7 +89,8 @@ _handle_show_image_name() {
 
 _may_stop_and_rm() {
   if _container_exists $container_name; then 
-    if [ `_container_status $container_name` = "running" ]; then
+    local status=`_container_status $container_name`
+    if [ "$status" = "running" -o "$status" = "restarting" ]; then
         echo "Stopping $container_name"
         docker stop $container_name >/dev/null
     fi
@@ -110,7 +111,8 @@ _may_rename_kill_or_rm() {
   fi
   
   if _container_exists $container_name; then
-    if [ `_container_status $container_name` = "running" ]; then
+    local status=`_container_status $container_name`
+    if [ "$status" = "running" ]; then
       # on s'assure que s'il ne termine pas, il ne sera pas redémarré au reboot
       docker update --restart=no $container_name >/dev/null
       # on renomme le précédent containeur
@@ -120,6 +122,10 @@ _may_rename_kill_or_rm() {
       docker kill --signal=$1 $old_name >/dev/null
       rc=killed
     else
+      if [ "$status" = restarting ]; then
+        echo "WARNING : le conteneur précédent redémarre. On suppose qu'il redémarre en boucle => on le supprime"
+        docker stop $container_name
+      fi
       # le conteneur ne tourne pas, on le supprime
       docker rm $container_name >/dev/null
     fi
