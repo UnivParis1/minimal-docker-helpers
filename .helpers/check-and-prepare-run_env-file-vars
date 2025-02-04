@@ -29,6 +29,7 @@ while (<$F>) {
         print qq(rw_vols="\$rw_vols $mountpoint";\n);
     } elsif (/^(maxHttpHeaderSize|maxPostSize|maxParameterCount|maxActiveSessionsGoal)=(-?\d+)$/ ||
              /^(remoteIpInternalProxies)=([\d:.\[\]\(\)\|]+)$/ ||
+             /^(MaxHeapSize)=([\w.]+)$/ ||
              /^(use_http_proxy_via)=(env)$/ ||
              /^(use_http_proxy_for)=(java|maven)$/) {
         print "$1='$2';\n";
