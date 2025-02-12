@@ -187,4 +187,4 @@ _docker_run mvn -f /webhome/toto/src/pom.xml --offline -Dmaven.resources.skip=tr
 
 ## Ajout d'une version PHP-FPM
 
-S'inspirer de .helpers/php-fpm/example-php-fpm-8.2
+S'inspirer de .helpers/images/php-fpm-8.2
