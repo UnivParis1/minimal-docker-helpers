@@ -139,6 +139,12 @@ may_configure_rsyslog_and_logrotate() {
     ln -s /opt/dockers/.helpers/various/rsyslog.conf $rsyslog_conf_file
     systemctl restart rsyslog
   fi
+  rsyslog_fpm_conf_file=/etc/rsyslog.d/docker-fpm-containers-separate-files.conf
+  if [ ! -e $rsyslog_fpm_conf_file ]; then
+    echo "Installing $rsyslog_fpm_conf_file and restarting rsyslog"
+    ln -s /opt/dockers/.helpers/php-fpm/rsyslog.conf $rsyslog_fpm_conf_file
+    systemctl restart rsyslog
+  fi
   logrotate_conf_file=/etc/logrotate.d/docker-containers.conf
   if [ ! -e $logrotate_conf_file ]; then
     echo "Installing $logrotate_conf_file"

@@ -10,7 +10,7 @@ base_dir_template='$user_home/www'
 run_user=fpm
 run_group=$user
 
-ro_vols="$ro_vols /usr/local/etc/ssl /var/run/mysqld"
+ro_vols="$ro_vols /usr/local/etc/ssl /var/run/mysqld /run/systemd/journal/dev-log:/dev/log"
 rw_vols="$rw_vols $base_dir"
 
 _may_rename_kill_or_rm QUIT
@@ -27,4 +27,4 @@ install -d -o $user -g $user -m 770 $user_home/.run /var/lib/php/sessions-$user
 rw_vols="$rw_vols $user_home/.run:/run/php /var/lib/php/sessions-$user:/var/lib/php/sessions"
 
 
-_docker_run
+_docker_run --define syslog.ident=$container_name:docker-fpm
