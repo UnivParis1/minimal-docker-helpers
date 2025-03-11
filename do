@@ -129,6 +129,8 @@ sub apply_rights {
             write_file($sudoer_file, <<EOS);
 $user ALL=(root) NOPASSWD: /opt/dockers/do build $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do build-run $app
+$user ALL=(root) NOPASSWD: /opt/dockers/do build-runOnce $app
+$user ALL=(root) NOPASSWD: /opt/dockers/do build-runOnce $app *
 $user ALL=(root) NOPASSWD: /opt/dockers/do run $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $app *
@@ -323,7 +325,7 @@ chdir '/opt/dockers' or die;
 
 while (1) {
     @ARGV or last;
-    if (my ($opt) = grep { $ARGV[0] eq $_ } "--only-run", "--logsf", "--quiet", "--if-old", "--check-image-old") {
+    if (my ($opt) = grep { $ARGV[0] eq $_ } "--only-run", "--logsf", "--quiet", "--verbose", "--if-old", "--check-image-old") {
         shift;
         $opt =~ s/^--//;
         $opt =~ s/-/_/g;
