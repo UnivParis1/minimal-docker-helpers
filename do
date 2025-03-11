@@ -129,6 +129,7 @@ sub apply_rights {
             write_file($sudoer_file, <<EOS);
 $user ALL=(root) NOPASSWD: /opt/dockers/do build $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do build-run $app
+$user ALL=(root) NOPASSWD: /opt/dockers/do build-runOnce $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do run $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $app *
