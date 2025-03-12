@@ -10,7 +10,17 @@ base_dir_template='$user_home/www'
 run_user=$user
 run_group=www-data
 
-ro_vols="$ro_vols /usr/local/etc/ssl $base_dir /var/run/mysqld /run/systemd/journal/dev-log:/dev/log"
+# on monte $base_dir read-only, mais uniquement s'il n'est pas read-write dans run.env (pour éviter l'erreur "Duplicate mount point")
+for i in $rw_vols; do
+    if [ $i = $base_dir ]; then
+        base_dir_mounted_rw=1
+    fi
+done
+if [ -z "$base_dir_mounted_rw" ]; then
+    ro_vols="$ro_vols $base_dir"
+fi
+
+ro_vols="$ro_vols /usr/local/etc/ssl /var/run/mysqld /run/systemd/journal/dev-log:/dev/log"
 
 
 _may_rename_kill_or_rm QUIT
