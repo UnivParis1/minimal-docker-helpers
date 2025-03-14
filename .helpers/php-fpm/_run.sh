@@ -10,7 +10,15 @@ base_dir_template='$user_home/www'
 run_user=fpm
 run_group=$user
 
-ro_vols="$ro_vols /usr/local/etc/ssl /var/run/mysqld /run/systemd/journal/dev-log:/dev/log"
+# à supprimer ?
+ro_vols="$ro_vols /usr/local/etc/ssl"
+
+# accéder au mysql de l'hôte
+ro_vols="$ro_vols /var/run/mysqld"
+
+# pour permettre syslog dans le conteneur ( https://github.com/prigaux/notes/blob/main/FPM-et-messages-de-logs-de-PHP.md )
+ro_vols="$ro_vols /run/systemd/journal/dev-log:/dev/log"
+
 rw_vols="$rw_vols $base_dir"
 
 _may_rename_kill_or_rm QUIT
