@@ -20,6 +20,11 @@ if [ -z "$base_dir_mounted_rw" ]; then
     ro_vols="$ro_vols $base_dir"
 fi
 
+# plutôt que d'installer "ca-certificates" dans l'image, on fournit les certificats de l'hote. Cela permet notamment de fournir AC.univ-paris1.fr.pem (y compris dans le fichier généré /etc/ssl/certs/ca-certificates.crt )
+ro_vols="$ro_vols /etc/ssl/certs /usr/share/ca-certificates /usr/local/share/ca-certificates"
+# on fournit aussi les liens symboliques pour PHP fopen/file_get_contents (symlinks fournis par le paquet "openssl")
+ro_vols="$ro_vols /usr/lib/ssl/certs"
+
 # à supprimer ?
 ro_vols="$ro_vols /usr/local/etc/ssl"
 
