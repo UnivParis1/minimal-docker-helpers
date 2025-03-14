@@ -20,7 +20,14 @@ if [ -z "$base_dir_mounted_rw" ]; then
     ro_vols="$ro_vols $base_dir"
 fi
 
-ro_vols="$ro_vols /usr/local/etc/ssl /var/run/mysqld /run/systemd/journal/dev-log:/dev/log"
+# à supprimer ?
+ro_vols="$ro_vols /usr/local/etc/ssl"
+
+# accéder au mysql de l'hôte
+ro_vols="$ro_vols /var/run/mysqld"
+
+# pour permettre syslog dans le conteneur ( https://github.com/prigaux/notes/blob/main/FPM-et-messages-de-logs-de-PHP.md )
+ro_vols="$ro_vols /run/systemd/journal/dev-log:/dev/log"
 
 
 _may_rename_kill_or_rm QUIT
