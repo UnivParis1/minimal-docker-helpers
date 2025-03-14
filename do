@@ -141,6 +141,8 @@ $user ALL=(root) NOPASSWD: /usr/bin/docker exec -it $app *
 $user ALL=(root) NOPASSWD: /usr/bin/docker exec $app *
 $user ALL=(root) NOPASSWD: /usr/bin/docker logs $app
 $user ALL=(root) NOPASSWD: /usr/bin/docker logs $app *
+$user ALL=(root) NOPASSWD: /usr/bin/cat /var/log/docker/$app.log
+$user ALL=(root) NOPASSWD: /usr/bin/tail -f /var/log/docker/$app.log
 EOS
         }
     }
