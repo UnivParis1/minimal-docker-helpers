@@ -6,6 +6,9 @@
 # - mbstring (paquets debian ajoutés manuellement car très utiles)
 FROM debian:bookworm-slim
 
+# faire dépendre le docker cache des mises à jour de sécurité est mis à jour
+ADD https://security.debian.org/debian-security/dists/bookworm-security/InRelease /root/bookworm-security-InRelease
+
 ARG DEBIAN_FRONTEND=noninteractive
 RUN echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/No-Recommends
 RUN apt-get update && apt-get upgrade -y && \
