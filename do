@@ -262,6 +262,7 @@ sub may_run_many {
     if ($opts{if_old}) {
         my %old_containers = map { $_ => 1 } old_containers();
         @l = grep { $old_containers{$_->{name}} } @l;
+        @l or print "${YELLOW}Aucun conteneurs à re-créer${NC}\n";
     }
     run($_) foreach @l;
 }
