@@ -7,13 +7,24 @@ base_dir_template='$user_home/www'
 
 . .helpers/lib-run--set-vars.sh
 
-run_user=fpm
-run_group=$user
+run_user=$user
+run_group=www-data
+
+# on monte $base_dir read-only, mais uniquement s'il n'est pas read-write dans run.env (pour éviter l'erreur "Duplicate mount point")
+for i in $rw_vols; do
+    if [ $i = $base_dir ]; then
+        base_dir_mounted_rw=1
+    fi
+done
+if [ -z "$base_dir_mounted_rw" ]; then
+    ro_vols="$ro_vols $base_dir"
+fi
 
 # plutôt que d'installer "ca-certificates" dans l'image, on fournit les certificats de l'hote. Cela permet notamment de fournir AC.univ-paris1.fr.pem (y compris dans le fichier généré /etc/ssl/certs/ca-certificates.crt )
 ro_vols="$ro_vols /etc/ssl/certs /usr/share/ca-certificates /usr/local/share/ca-certificates"
-# on fournit aussi les liens symboliques pour PHP fopen/file_get_contents (symlinks fournis par le paquet "openssl")
-ro_vols="$ro_vols /usr/lib/ssl/certs"
+# on fournit /usr/lib/ssl/certs utilisé notamment par PHP fopen/file_get_contents
+# NB: si openssl est installé dans l'image, /usr/lib/ssl/certs est un symlink vers /etc/ssl/certs dans l'image. Cela forcera en fait le montage de /etc/ssl/certs sur /etc/ssl/certs, ce qui n'est pas un pb.
+ro_vols="$ro_vols /etc/ssl/certs:/usr/lib/ssl/certs"
 
 # à supprimer ?
 ro_vols="$ro_vols /usr/local/etc/ssl"
@@ -24,7 +35,6 @@ ro_vols="$ro_vols /var/run/mysqld"
 # pour permettre syslog dans le conteneur ( https://github.com/prigaux/notes/blob/main/FPM-et-messages-de-logs-de-PHP.md )
 ro_vols="$ro_vols /run/systemd/journal/dev-log:/dev/log"
 
-rw_vols="$rw_vols $base_dir"
 
 _may_rename_kill_or_rm QUIT
 if [ "$rc" = killed ]; then 
