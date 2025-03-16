@@ -223,8 +223,9 @@ sub may_pull {
     my ($image) = @_;
     if ($image && $image !~ /^up1-/ && !$pulled{$image}) {
         # ce n'est pas une image locale, on demande la dernière version (pour les rolling tags)
-        print "docker pull $image\n";
+        print STDERR "${YELLOW}docker pull $image${NC}\n";
         sys("docker", "pull", $image);
+        print "\n";
         $pulled{$image} = 1;
     }
 }
