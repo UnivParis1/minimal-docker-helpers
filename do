@@ -156,20 +156,28 @@ EOS
 sub build {
     my ($app, $isRunOnce) = @_;
     my $image = $isRunOnce ? "up1-once-$app" : "up1-$app";
-    print "Building image $image\n";
     my $opts = $isRunOnce ? "-f $app/runOnce.dockerfile" : '';
     my $cmd = "docker build $opts -t $image $app/";
     log_($cmd);
     open(my $F, "$cmd |");
+    my @may_show = "${YELLOW}Building image $image${NC}\n";
     my $out;
+    my $status = 'from_cache';
     while (<$F>) {
-        print if /^Step/; # afficher une information de progression, mais pas tout
+        push @may_show, $_ if /^Step/;
+        if (/^\Q ---> Running in /) {
+            $status = 'built';
+            # afficher une information de progression, mais pas tout, et uniquement si pas de cache
+            print foreach @may_show;
+            @may_show = ();
+        }
         $out .= $_;
     }
     close($F) or do {
         print $out;
         exit 1;
-    }
+    };
+    print "\n" if $status eq 'built';
 }
 
 my %built;
