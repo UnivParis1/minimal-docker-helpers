@@ -178,6 +178,7 @@ sub build {
         exit 1;
     };
     print "\n" if $status eq 'built';
+    $status
 }
 
 my %built;
@@ -206,9 +207,8 @@ sub may_build_many {
         if (my $parent = $appv->{$isRunOnce ? 'FROM_runOnce_up1' : 'FROM_up1'}) {
             my $parent_modified = $rec->($parent, $app);
         }
-        build($app, $isRunOnce);
-        $built{$app} = 1;
-        'modified'
+        $built{$app} = build($app, $isRunOnce);
+        $built{$app}
     };
 
     while (%todo) {
@@ -380,6 +380,7 @@ if ($want_pull) {
 }
 if ($want_build) {
     may_build_many([@appsv], '') ;
+    print STDERR "${YELLOW}Aucune image modifiée${NC}\n\n" if !grep { $built{$_} ne 'from_cache' } keys %built;
 }
 if ($want_build_runOnce && !$opts{only_run}) {
     may_build_many([@appsv], 'runOnce');
