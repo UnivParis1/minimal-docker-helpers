@@ -22,7 +22,7 @@ sub all_cmds {
     my %cmd = (
         upgrade => '--verbose APPS',
         pull => '--only-run __ALL_OR_APPS',
-        build => '--only-run --if-old --verbose __ALL_OR_APPS',
+        build => '--only-run --verbose __ALL_OR_APPS',
         run => '--if-old --verbose --logsf __ALL_OR_APPS',
         runOnce => 'RUN_ONCE',
         ps => '--quiet --check-image-old APPS',

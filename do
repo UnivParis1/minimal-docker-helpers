@@ -181,12 +181,6 @@ sub may_build_many {
 
     my %previously_built = map { /^up1-(.*):latest/ ? ($1 => 1) : () } `docker images --format '{{.Repository}}:{{.Tag}}'`;
 
-    if ($opts{if_old}) {
-        my %old_or_missing_images = old_or_missing_images($appsv, $isRunOnce);
-        # ces images sont à jour, pas besoin de les reconstruire
-        %built = map { $_ => 1 } grep { !$old_or_missing_images{$_} } keys %todo;
-    }
-
     my $rec; $rec = sub {
         my ($app, $child) = @_;
 
@@ -294,7 +288,7 @@ sub usage {
 usage: 
     $0 upgrade [--verbose] [<app> ...]
     $0 pull [--only-run] { --all | <app> ... }
-    $0 build [--only-run] [--if-old] [--verbose] { --all | <app> ... }
+    $0 build [--only-run] [--verbose] { --all | <app> ... }
     $0 { run | build-run } [--if-old] [--verbose] [--logsf] { --all | <app> ... }
     $0 { runOnce | build-runOnce | runOnce-run } <app> [--cd <dir|subdir>] <args...>
     $0 ps [--quiet] [--check-image-old] [<app> ... ]
