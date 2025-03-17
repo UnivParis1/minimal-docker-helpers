@@ -186,6 +186,11 @@ docker_run_common() {
   fi
 
   ro_vols="$ro_vols /etc/timezone"
+  # nécessaire pour nodejs qui sinon utilise le lien /etc/localtime qu'il est impossible de modifier par mount-bind
+  opts="$opts --env TZ=`cat /etc/timezone`"
+
+  # utile pour nodejs
+  opts="$opts --env LANG=fr_FR.UTF-8"
 
   if [ -z "$run_user" ]; then
     run_user=$user
