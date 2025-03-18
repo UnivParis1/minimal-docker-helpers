@@ -76,6 +76,7 @@ Conventions :
   * /webhome/toto/webapps/ : où déployer
   * /var/log/toto/tomcat/ : contient les logs tomcat
   * /var/lib/sessions-toto/ : contient les sessions pendant le redémarrage
+  * /var/log/docker/toto.log : contient les logs FPM + les "[error_log](https://github.com/prigaux/notes/blob/main/FPM-et-messages-de-logs-de-PHP.md)" (ajoutés via "syslog")
 
 Ajout d'une application
 
