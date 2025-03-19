@@ -187,6 +187,7 @@ docker_run_common() {
 
   ro_vols="$ro_vols /etc/timezone"
   # nécessaire pour nodejs qui sinon utilise le lien /etc/localtime qu'il est impossible de modifier par mount-bind
+  # utilisé aussi pour PHP via la conf "date.timezone = ${TZ}"
   opts="$opts --env TZ=`cat /etc/timezone`"
 
   # utile pour nodejs
