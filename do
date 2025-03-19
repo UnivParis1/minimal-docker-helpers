@@ -80,6 +80,10 @@ sub old_or_missing_images {
 sub compute_app_vars {
     my ($app) = @_;
     my %v = (name => $app);
+
+    $v{image} = may_get_image("$app/run.env");
+    $v{image_runOnce} = may_get_image("$app/runOnce.env");
+
     if (-e "$app/Dockerfile") {
         $v{FROM} = get_FROM("$app/Dockerfile");
         $v{FROM_up1} = FROM_to_name($v{FROM});
@@ -96,16 +100,16 @@ sub compute_app_vars {
     } elsif ($v{FROM_up1}) {
         $v{run_file} = "$v{FROM_up1}/default-run.sh";
         -e $v{run_file} or die("no $app/run.sh and no $v{FROM_up1}/default-run.sh\n");
+    } elsif (-e "$app/run.env" && $v{image}) {
+        $v{run_file} = FROM_to_name($v{image}) . "/default-run.sh";
+        -e $v{run_file} or die("no $app/run.sh and no $v{run_file}\n");
     } elsif (-e "$app/run.env") {
-        die "no $app/run.sh\n";
+        -e $v{run_file} or die("no $app/run.sh and no Dockerfile and no image= in $app/run.env\n");
     }
 
     $v{runOnce_file} =
         -e "$app/runOnce.sh" ? "$app/runOnce.sh" :
         -e "$app/runOnce.env" ? ".helpers/_runOnce.sh" : undef;
-
-    $v{image} = may_get_image("$app/run.env");
-    $v{image_runOnce} = may_get_image("$app/runOnce.env");
 
     \%v
 }
