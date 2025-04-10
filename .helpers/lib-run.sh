@@ -88,11 +88,15 @@ _handle_show_image_name() {
 }
 
 _may_stop_and_rm() {
+  time=$1
+  if [ -z "$1" ]; then
+    time=10
+  fi
   if _container_exists $container_name; then 
     local status=`_container_status $container_name`
     if [ "$status" = "running" -o "$status" = "restarting" ]; then
         echo "Stopping $container_name"
-        docker stop $container_name >/dev/null
+        docker stop --time=$time $container_name >/dev/null
     fi
     docker rm $container_name >/dev/null
   fi
