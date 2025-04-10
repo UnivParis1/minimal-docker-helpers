@@ -239,7 +239,11 @@ docker_run_common() {
 _docker_run() {
   docker_run_common
 
-  if [ $run_user = root ]; then
+  if [ -n "$verbatim_etc_passwd" ]; then
+    # utilisé pour les images dépendant du nom de l'utilisateur dans l'image
+    # => à défaut de mieux, on conserve le /etc/passwd de l'image
+    :
+  elif [ $run_user = root ]; then
     # utilisé pour les images faisant plusieurs choses
     # => à défaut de mieux, on conserve le /etc/passwd de l'image
     :
