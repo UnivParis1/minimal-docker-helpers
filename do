@@ -124,6 +124,8 @@ sub apply_rights {
     if (-e "$app/IGNORE") {
         # l'utilisateur n'existe sûrement pas => pas de chgrp du répertoire, mais le chmod 750 est suffisant
     } elsif (-e "$app/default-run.sh") {
+    } elsif (-e "$app/run.sh" && read_file("$app/run.sh") =~ /^\s*user=root\s*$/m) {
+        # l'utilisateur n'existe pas => pas de chgrp du répertoire, mais le chmod 750 est suffisant
     } elsif (grep { -e "$app/$_" } @user_files) {
         my $user = $app =~ /(.*)--/ && $1 || $app;
         sys("chgrp", $user, $app);
