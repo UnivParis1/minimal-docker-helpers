@@ -279,7 +279,13 @@ _docker_run() {
 _docker_runOnce() {
   docker_run_common
 
-  ro_vols="$ro_vols /etc/passwd /etc/group"
+  if [ -n "$verbatim_etc_passwd" ]; then
+    # utilisé pour les images dépendant du nom de l'utilisateur dans l'image
+    # => à défaut de mieux, on conserve le /etc/passwd de l'image
+    :
+  else
+    ro_vols="$ro_vols /etc/passwd /etc/group"
+  fi
 
   if [ -t 0 ]; then
     opts="--interactive --tty --rm $opts"
