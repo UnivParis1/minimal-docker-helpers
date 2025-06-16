@@ -35,6 +35,8 @@ fi
 # do not use default ENTRYPOINT
 opts="$opts --entrypoint="
 
-echo "Running $@ ($image)" >&2
+if [ -z "$QUIET" ]; then
+  echo "Running $@ ($image)" >&2
+fi
 
 _docker_runOnce "$@"

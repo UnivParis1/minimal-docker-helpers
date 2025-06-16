@@ -258,6 +258,7 @@ sub run_once {
     $appv->{runOnce_file} or die("ERROR: no runOnce.sh nor runOnce.env\n");
     log_(qq(Running "container_name=$appv->{name} $appv->{runOnce_file} @ARGV"));
     $ENV{container_name} = $appv->{name};
+    $ENV{QUIET} = $opts{quiet};
     sys($appv->{runOnce_file}, @ARGV);
 
 }
@@ -306,7 +307,7 @@ usage:
     $0 pull [--only-run] { --all | <app> ... }
     $0 build [--only-run] [--verbose] { --all | <app> ... }
     $0 { run | build-run } [--if-old] [--verbose] [--logsf] { --all | <app> ... }
-    $0 { runOnce | build-runOnce | runOnce-run } <app> [--cd <dir|subdir>] <args...>
+    $0 { runOnce | build-runOnce | runOnce-run } [--quiet] <app> [--cd <dir|subdir>] <args...>
     $0 ps [--quiet] [--check-image-old] [<app> ... ]
     $0 rights [--quiet] { --all | <app> ... }
 EOS
