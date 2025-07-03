@@ -300,6 +300,28 @@ sub ps_many {
     ps($_->{name}, \%states, \%old_containers, \%old_or_missing_images) foreach grep { $_->{run_file} } @$appsv;
 }
 
+sub stop_rm {
+    my ($appsv) = @_;
+    foreach my $appv (@$appsv) {
+        my $app = $appv->{name};
+        my $state = `docker inspect --format '{{.State.Status}}' $app 2>/dev/null`;
+        chomp($state);
+        if ($state eq 'exited') {
+            print "$app is already stopped, removing container\n";
+        } elsif (!$state) {
+            die "Container $app does not exist\n";
+        }
+        if ($state eq 'running') {
+            print "Stopping $state $app\n";
+            sys("docker stop $app >/dev/null");
+        }
+        sys("docker rm $app >/dev/null");
+        if ($state eq 'running') {
+            print "$app stopped and removed\n";
+        }
+    }
+}
+
 sub usage {
     die(<<"EOS");
 usage: 
@@ -310,6 +332,7 @@ usage:
     $0 { runOnce | build-runOnce | runOnce-run } [--quiet] <app> [--cd <dir|subdir>] <args...>
     $0 ps [--quiet] [--check-image-old] [<app> ... ]
     $0 rights [--quiet] { --all | <app> ... }
+    $0 stop-rm [--quiet] { --all | <app> ... }
 EOS
 }
 
@@ -317,7 +340,7 @@ if ($> != 0 ) {
   die("Re-lancer avec sudo\n");
 }
 
-my ($want_upgrade, $want_build, $want_pull, $want_run, $want_build_runOnce, $want_runOnce, $want_ps);
+my ($want_upgrade, $want_build, $want_pull, $want_run, $want_build_runOnce, $want_runOnce, $want_ps, $want_stop_rm);
 my %actions = (
     'build' => sub { $want_build = 1 },
     'pull' => sub { $want_pull = $want_ps = $opts{check_image_old} = 1 },
@@ -329,6 +352,7 @@ my %actions = (
     'runOnce-run' => sub { $want_runOnce = $want_run = 1 },
     'rights' => sub { },
     'ps' => sub { $want_ps=1 },
+    'stop-rm' => sub { $want_stop_rm = 1 },
 );
 my $action = shift;
 my $set_opts = $actions{$action || ''} or usage();
@@ -401,6 +425,9 @@ if ($want_run) {
 }
 if ($want_ps) {
     ps_many([@appsv]);
+}
+if ($want_stop_rm) {
+    stop_rm([@appsv]);
 }
 if ($opts{logsf}) {
     exec('docker', 'logs', '-f', $apps[0]);

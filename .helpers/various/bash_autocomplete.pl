@@ -27,6 +27,7 @@ sub all_cmds {
         runOnce => 'RUN_ONCE',
         ps => '--quiet --check-image-old APPS',
         rights => '--quiet __ALL_OR_APPS',
+        'stop-rm' => '--quiet __ALL_OR_APPS',
     );
     $cmd{'build-run'} = $cmd{run};
     $cmd{'build-runOnce'} = $cmd{runOnce};
