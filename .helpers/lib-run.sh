@@ -19,6 +19,11 @@
 # variables parfois complétés
 # - $rw_vols : si configuré via "rw_vol=" dans run.env
 _compute_default_vars_and_read_env() {
+    # ne rien faire si déjà appelé (permet d'avoir ". .helpers/lib-run--set-vars.sh" plusieurs fois, notamment qd .helpers/foo/_run.sh appelle .helpers/bar/_run.sh)
+    if [ -n "$action" ]; then
+        return
+    fi
+    
     case $0 in
       *runOnce.sh) action=runOnce ;;
       *run.sh) action=run ;;
