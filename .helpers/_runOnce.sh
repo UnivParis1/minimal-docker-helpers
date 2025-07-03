@@ -32,6 +32,10 @@ if [ ! -e $workdir ]; then
     exit 1
 fi
 
+# pouvoir voir les processes de l'hôte (et donc les containeurs)
+# utile pour jstack
+opts="$opts --pid=host"
+ 
 # do not use default ENTRYPOINT
 opts="$opts --entrypoint="
 
