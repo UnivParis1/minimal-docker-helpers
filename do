@@ -398,7 +398,7 @@ if (@ARGV ? $ARGV[0] eq "--all" : $want_ps || $want_upgrade) {
 apply_rights($_) foreach @apps;
 
 @apps = grep {
-    my $ignore = -e "$_/IGNORE";
+    my $ignore = -e "$_/IGNORE" || -e "$_/SYSTEMD";
     if ($ignore) {
         $opts{quiet} or print "$_ ignoré (supprimer le fichier $_/IGNORE pour réactiver)\n";
     }
