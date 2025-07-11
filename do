@@ -141,6 +141,7 @@ $user ALL=(root) NOPASSWD: /opt/dockers/do run $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do run --logsf $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce $app *
+$user ALL=(root) NOPASSWD: /opt/dockers/do runOnce --quiet $app *
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce-run $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce-run $app *
 $user ALL=(root) NOPASSWD: /usr/bin/docker ps --filter name=$app
