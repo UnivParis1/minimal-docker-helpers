@@ -146,6 +146,7 @@ $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce-run $app
 $user ALL=(root) NOPASSWD: /opt/dockers/do runOnce-run $app *
 $user ALL=(root) NOPASSWD: /usr/bin/docker ps --filter name=$app
 $user ALL=(root) NOPASSWD: /usr/bin/docker exec -it $app *
+$user ALL=(root) NOPASSWD: /usr/bin/docker exec -i $app *
 $user ALL=(root) NOPASSWD: /usr/bin/docker exec $app *
 $user ALL=(root) NOPASSWD: /usr/bin/docker logs $app
 $user ALL=(root) NOPASSWD: /usr/bin/docker logs $app *
