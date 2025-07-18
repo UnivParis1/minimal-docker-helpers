@@ -16,6 +16,7 @@ my %c = (
     DEFAULT => "\033[0;37m",
     NC => "\033[0m",
 );
+my $color_on = -t STDOUT;
 
 my @lst_files = (
     glob("/opt/dockers/.helpers/host-pkgs/*.lst"),
@@ -91,7 +92,7 @@ if (@unknown) {
 sub colored {
     my ($color, $txt) = @_;
     $c{$color} or die "unknown color $color";
-    $c{$color} . $txt . $c{NC}
+    $color_on ? $c{$color} . $txt . $c{NC} : $txt
 }
 sub display_comment {
     my ($msg) = @_;
