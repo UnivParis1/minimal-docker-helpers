@@ -115,7 +115,7 @@ sub compute_app_vars {
 }
 
 
-my @user_files = qw(Dockerfile runeOnce.dockerfile run.env runOnce.env);
+my @user_files = qw(Dockerfile runOnce.dockerfile run.env runOnce.env);
 
 sub apply_rights {
     my ($app) = @_;
