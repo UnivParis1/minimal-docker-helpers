@@ -22,7 +22,11 @@ install -d -o $user -g adm -m 770 $tomcat_logdir
 
 assets=/opt/dockers/.helpers/tomcat/assets
 
-webapps="$webapps $assets/tomcat-monitor.war"
+if echo $image | grep -q 'tomcat:1[0-9]-'; then
+    webapps="$webapps $assets/tomcat10/tomcat-monitor.war"
+else
+    webapps="$webapps $assets/tomcat-monitor.war"
+fi
 for webapp in $webapps; do
     ro_vols="$ro_vols $webapp:/usr/local/tomcat/webapps/`basename $webapp`"
 done
