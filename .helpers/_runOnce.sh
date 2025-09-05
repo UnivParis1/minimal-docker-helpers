@@ -2,7 +2,7 @@
 
 . .helpers/lib-run--set-vars.sh
 
-rw_vols=$user_home
+rw_vols="$rw_vols $user_home"
 
 if [ "$1" = "--cd" ]; then
     shift
