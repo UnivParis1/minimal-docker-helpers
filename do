@@ -50,7 +50,7 @@ sub FROM_to_name {
 
 sub may_get_image {
     my ($env_file) = @_;
-    -e $env_file && `.helpers/check-and-prepare-run_env-file-vars --only-image $env_file` =~ /^image='(\S+)'/ && $1
+    -e $env_file && read_file($env_file) =~ m!^image=([\w:./-]+)$!m && $1
 }
 
 sub old_containers {
@@ -119,8 +119,9 @@ my @user_files = qw(Dockerfile runOnce.dockerfile run.env runOnce.env);
 
 sub apply_rights {
     my ($app) = @_;
-    sys('chmod', 700, '.git');
-    sys('chmod', 750, $app);
+    chmod(0700, '.git') or die "chmod .git failed";
+    chmod(0750, $app) or die "chmod $app failed";
+
     if (-e "$app/IGNORE") {
         # l'utilisateur n'existe sûrement pas => pas de chgrp du répertoire, mais le chmod 750 est suffisant
     } elsif (-e "$app/default-run.sh") {
@@ -128,8 +129,10 @@ sub apply_rights {
         # l'utilisateur n'existe pas => pas de chgrp du répertoire, mais le chmod 750 est suffisant
     } elsif (grep { -e "$app/$_" } @user_files) {
         my $user = $app =~ /(.*)--/ && $1 || $app;
-        sys("chgrp", $user, $app);
-        -e $_ and sys("chown", "-R", $user, $_) foreach map { "$app/$_" } @user_files;
+        my $uid = getpwnam($user) or die "app $app requires user $user\n";
+        my $gid = getgrnam($user);
+        chown(0, $gid, $app) or die "chgrp $app failed";
+        -e $_ and chown($uid, $gid, $_) foreach map { "$app/$_" } @user_files;
         my $sudoer_file = "/etc/sudoers.d/dockers-$app";
         if (! -e $sudoer_file) {
             write_file($sudoer_file, <<EOS);
