@@ -53,8 +53,10 @@ sub may_get_image {
     -e $env_file && read_file($env_file) =~ m!^image=([\w:./-]+)$!m && $1
 }
 
+# returns  containers which should be re-created with the new image
 sub old_containers {
-    map { /(\S+) sha256:/ ? $1 : () } `docker ps --no-trunc --format '{{.Names}} {{.Image}}'`
+    # when container image is sha256:xxx it means the image is no more the latest
+    map { /(\S+) sha256:/ ? $1 : () } `docker container ls --no-trunc --format '{{.Names}} {{.Image}}'`
 }
 
 sub old_or_missing_images {
@@ -200,7 +202,7 @@ sub may_build_many {
         -e ($isRunOnce ? "$_->{name}/runOnce.dockerfile" : "$_->{name}/Dockerfile")
     } @$appsv;
 
-    my %previously_built = map { /^up1-(.*):latest/ ? ($1 => 1) : () } `docker images --format '{{.Repository}}:{{.Tag}}'`;
+    my %previously_built = map { /^up1-(.*):latest/ ? ($1 => 1) : () } `docker image ls --format '{{.Repository}}:{{.Tag}}'`;
 
     my $rec; $rec = sub {
         my ($app, $child) = @_;
@@ -300,7 +302,7 @@ sub ps {
 
 sub ps_many {
     my ($appsv) = @_;
-    my %states = map { split } `docker ps -a --format "{{.Names}} {{.State}}"`;
+    my %states = map { split } `docker container ls -a --format "{{.Names}} {{.State}}"`;
     my %old_containers = map { $_ => 1 } old_containers();
     my %old_or_missing_images = $opts{check_image_old} ? old_or_missing_images($appsv) : ();
     ps($_->{name}, \%states, \%old_containers, \%old_or_missing_images) foreach grep { $_->{run_file} } @$appsv;
