@@ -23,6 +23,11 @@ sub may_symlink {
         $cb->($link, $f);
     }
 }
+sub difference {
+    my ($a, $to_remove) = @_;
+    my %to_remove = map { $_ => 1 } @$to_remove;
+    grep { !$to_remove{$_} } @$a;
+}
 
 my $GREEN = "\033[0;32m";
 my $YELLOW = "\033[0;33m";
@@ -57,6 +62,11 @@ sub may_get_image {
 sub old_containers {
     # when container image is sha256:xxx it means the image is no more the latest
     map { /(\S+) sha256:/ ? $1 : () } `docker container ls --no-trunc --format '{{.Names}} {{.Image}}'`
+}
+
+# NB: returns either up1-xxx or repo:version or sha256:xxx
+sub images_in_use {
+    map { chomp; $_ } `docker container ls --no-trunc --format '{{.Image}}'`
 }
 
 sub old_or_missing_images {
@@ -116,6 +126,13 @@ sub compute_app_vars {
     \%v
 }
 
+sub all_appsv {
+    [ map {
+       # remove trailing slash
+       s!/$!!;
+       compute_app_vars($_)
+    } glob("*/") ]
+}
 
 my @user_files = qw(Dockerfile runOnce.dockerfile run.env runOnce.env);
 
@@ -165,6 +182,59 @@ EOS
         sub { "Installing $_[0] in $_[1]\n" });
     may_symlink('/opt/dockers/.helpers/various/bash_autocomplete', '/etc/bash_completion.d/opt_dockers_do',
         sub { "Installing $_[0] in $_[1]\n" });
+}
+
+sub purge_exited_containers {
+    my ($all_appsv) = @_;
+
+    my @exited = map { chomp; $_ } `docker container ls --filter 'status=exited' --format '{{.Names}}'`;
+    # do not remove known containers, only remove unknown ones (mostly containers which were renamed old-xxx)
+    if (my $unknown_exited_containers = join(" ", difference(\@exited, [ map { $_->{name} } @$all_appsv ]))) {
+        log_("Removing old containers: $unknown_exited_containers");
+        sys("docker container rm $unknown_exited_containers >/dev/null");
+    }
+}
+
+sub purge_unused_images {
+    my ($all_appsv) = @_;
+
+    my %images_in_use = map { $_ => 1 } images_in_use();
+    my %expected_images = map { $_ => 1 } grep { $_ } map {
+        my $for_run = $_->{image} || $_->{FROM};
+        my $for_runOnce = $_->{image_runOnce} || $_->{FROM_runOnce};
+        (
+            $for_run ? ($for_run, "up1-$_->{name}") : (),
+            $for_runOnce ? ($for_runOnce, "up1-once-$_->{name}") : (),
+        )
+    } @$all_appsv;
+
+    my %unused_images = map { 
+        s/:latest$//; 
+        my ($id, $name) = split; 
+        if ($images_in_use{$id} || $images_in_use{$name}) {
+            # in use!
+            ()
+        } elsif ($expected_images{$name}) {
+            # either : 
+            # - will be useful for build or run
+            # - will be useful for runOnce
+            ()
+        } else {
+            $id => $name
+        }
+    } `docker image ls --no-trunc --format '{{.ID}} {{.Repository}}:{{.Tag}}'`;
+
+    my @removed = map {
+        system("docker image rm $_ >/dev/null 2>&1") == 0 ? $unused_images{$_} : ()
+    } keys %unused_images;
+    log_("Removed old/unused images: " . join(" ", sort @removed)) if @removed;
+    @removed
+}
+
+sub purge {
+    my ($all_appsv) = @_;    
+    purge_exited_containers($all_appsv);
+    while (purge_unused_images($all_appsv)) {}
 }
 
 sub build {
@@ -256,9 +326,6 @@ sub run {
     my ($appv) = @_;
     log_(qq(Running "VERBOSE=1 ./$appv->{run_file} $appv->{name}" :));
     sys("./$appv->{run_file}", $appv->{name});
-
-    # supprimer les anciens images/containers non utilisés
-    sys("docker system prune -f >/dev/null");
 }
 
 sub run_once {
@@ -279,7 +346,13 @@ sub may_run_many {
         @l = grep { $old_containers{$_->{name}} } @l;
         @l or print "${YELLOW}Aucun conteneurs à re-créer${NC}\n";
     }
-    run($_) foreach @l;
+
+    my $all_appsv = $opts{all} ? $appsv : all_appsv();
+
+    foreach (@l) {
+        run($_);
+        purge($all_appsv);
+    }
 }
 
 sub get_states {
@@ -383,6 +456,7 @@ while (1) {
 my @apps;
 if (@ARGV ? $ARGV[0] eq "--all" : $want_ps || $want_upgrade) {
     @apps = glob("*/");
+    $opts{all} = 1;
 } elsif (@ARGV) {
     if ($want_runOnce) {
         @apps = shift;
