@@ -53,6 +53,15 @@ sub FROM_to_name {
     $name
 }
 
+sub parse_size {
+    my ($Size) = @_;
+    $Size =~ s/GB$/ * 1024*1024*1024/;
+    $Size =~ s/MB$/ * 1024*1024/;
+    $Size =~ s/kB$/ * 1024/;
+    $Size =~ s/B$//;
+    eval $Size
+}
+
 sub may_get_image {
     my ($env_file) = @_;
     -e $env_file && read_file($env_file) =~ m!^image=([\w:./-]+)$!m && $1
@@ -62,6 +71,15 @@ sub may_get_image {
 sub old_containers {
     # when container image is sha256:xxx it means the image is no more the latest
     map { /(\S+) sha256:/ ? $1 : () } `docker container ls --no-trunc --format '{{.Names}} {{.Image}}'`
+}
+
+sub image_to_containers {
+    my %i2c;
+    foreach (`docker container ls --no-trunc --format '{{.Image}} {{.Names}}'`) {
+        my ($i, $c) = split;
+        push @{$i2c{$i}}, $c;
+    }
+    \%i2c
 }
 
 # NB: returns either up1-xxx or repo:version or sha256:xxx
@@ -403,6 +421,91 @@ sub stop_rm {
     }
 }
 
+sub images {
+    my ($appsv) = @_;
+
+    my $id_or_name_to_containers = image_to_containers();
+
+    my %expected_images;
+    foreach (@$appsv) {
+        $_->{FROM} and $expected_images{"up1-$_->{name}"}{parent} = $_->{FROM};
+        $_->{FROM_runOnce} and $expected_images{"up1-once-$_->{name}"}{parent} = $_->{FROM_runOnce};
+        $_->{image_runOnce} and push @{$expected_images{$_->{image_runOnce}}{containers_once}}, "once-$_->{name}";
+    }
+
+    my %images;
+    foreach (`docker image ls --no-trunc --format '{{.ID}}\t{{.CreatedSince}}\t{{.Size}}\t{{.Repository}}:{{.Tag}}'`) {
+        chomp; 
+        my ($id, $createdSince, $size, $name) = split "\t";
+        $name =~ s/:latest//; # normalize
+
+        my $h = {
+            id => $id,
+            CreatedSince => $createdSince,
+            size => int(parse_size($size) / 1024/1024) . "MB",
+            name => $name,
+            names => [$name],
+        };
+
+
+        my $more_h = delete $expected_images{$name} || {};
+        $h = { %$h, %$more_h };
+
+        $h->{containers} = $id_or_name_to_containers->{$id} || $id_or_name_to_containers->{$name};
+
+        if (my ($isRunOnce, $app) = $name =~ /^up1-(once-)?([^:]*)/) {
+            my ($appv) = grep { $_->{name} eq $app } @$appsv or warn("${RED}unknown image $name${NC}\n"), next;
+            $h->{app} = $app;
+        }
+        if ($images{$id}) {
+            $images{$id}{names} = $h->{names} = [ $h->{name}, @{$images{$id}{names}} ];
+            if (length($images{$id}{name}) < length($h->{name})) {
+                next;
+            }
+        } 
+        $images{$id} = $h ;
+    }
+    foreach my $id (keys %images) {
+        my $h = $images{$id};
+        if ($h->{name} =~ /^up1-/) {
+            my @history = map { chomp; [split] } `docker history --no-trunc --format '{{.ID}} {{.Size}}' $id`;
+            my @ids = map { $_->[0] } @history;
+            my @parents = grep { $_ && $_->{name} ne $h->{name} } map { $images{$_} } @ids;
+            my $parent = $parents[0];
+            if (!$parent) {
+                $h->{parent} .= " $YELLOW(old)$NC";
+            } else {
+                push @{$_->{children}}, $h->{name} foreach $parent;
+                $h->{parent} = $parent->{name};
+                $h->{parent} =~ s/([:-]prev\d*)?$/$YELLOW . ($1||'') . $NC/e;
+                my $delta = 0;
+                foreach (@history) {
+                    last if $_->[0] eq $parent->{id};
+                    $delta += parse_size($_->[1]);
+                }
+                $h->{size} = "+" . int($delta / 1024/1024) . "MB";
+            }
+        }
+    }
+
+    $images{$_} = { name => $_, missing => 1, %{$expected_images{$_}} } foreach keys %expected_images;
+
+    my $format = "%-45s %30s %10s   %-40s %-40s %s\n";
+    printf $format, "NAME$YELLOW$NC", 'CREATED' . $RED.$NC, 'SIZE', "PARENT $YELLOW$NC", 'CONTAINERS', 'ENFANTS';
+    foreach my $h (sort { $a->{name} cmp $b->{name} } values %images) {
+        $h->{name} =~ s/([:-]prev\d*)?$/$YELLOW . ($1||'') . $NC/e;
+        printf $format, 
+            $h->{name}, 
+            $h->{missing} ? "${RED}missing${NC}" : $h->{CreatedSince} . $RED.$NC, 
+            $h->{size} || '', 
+            $h->{parent} || " $YELLOW$NC", 
+            join(', ', @{$h->{containers_once} || []}) . ' ' .
+              ($h->{containers} ? "$GREEN" . join(', ', @{$h->{containers}}) . "$NC" :
+                $h->{children} || $h->{missing} || $h->{containers_once} || $h->{name} =~ /^up1-once-/ ? '' : "${YELLOW}unused${NC}"), 
+            "$GRAY" . join(', ', @{$h->{children} || []}) . "$NC";
+    }
+}
+
 sub usage {
     die(<<"EOS");
 usage: 
@@ -412,6 +515,7 @@ usage:
     $0 { run | build-run } [--if-old] [--verbose] [--logsf] { --all | <app> ... }
     $0 { runOnce | build-runOnce | runOnce-run } [--quiet] <app> [--cd <dir|subdir>] <args...>
     $0 purge
+    $0 images
     $0 ps [--quiet] [--check-image-old] [<app> ... ]
     $0 rights [--quiet] { --all | <app> ... }
     $0 stop-rm [--quiet] { --all | <app> ... }
@@ -422,10 +526,11 @@ if ($> != 0 ) {
   die("Re-lancer avec sudo\n");
 }
 
-my ($want_upgrade, $want_purge, $want_build, $want_pull, $want_run, $want_build_runOnce, $want_runOnce, $want_ps, $want_stop_rm);
+my ($want_upgrade, $want_purge, $want_build, $want_pull, $want_run, $want_build_runOnce, $want_runOnce, $want_ps, $want_images, $want_stop_rm);
 my %actions = (
     'build' => sub { $want_build = 1 },
     'purge' => sub { $want_purge = 1 },
+    'images' => sub { $want_images = 1 },
     'pull' => sub { $want_pull = $want_ps = $opts{check_image_old} = 1 },
     'run' => sub { $want_run = 1 },
     'build-run' => sub { $want_build = $want_run = 1 },
@@ -456,7 +561,7 @@ while (1) {
 }
 
 my @apps;
-if (@ARGV ? $ARGV[0] eq "--all" : $want_ps || $want_upgrade || $want_purge) {
+if (@ARGV ? $ARGV[0] eq "--all" : $want_ps || $want_upgrade || $want_purge || $want_images) {
     @apps = glob("*/");
     $opts{all} = 1;
 } elsif (@ARGV) {
@@ -513,6 +618,9 @@ if ($want_run) {
 }
 if ($want_ps) {
     ps_many([@appsv]);
+}
+if ($want_images) {
+    images([@appsv]);
 }
 if ($want_stop_rm) {
     stop_rm([@appsv]);
