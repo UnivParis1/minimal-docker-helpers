@@ -32,6 +32,7 @@ sub difference {
 my $GREEN = "\033[0;32m";
 my $YELLOW = "\033[0;33m";
 my $RED = "\033[0;31m";
+my $GRAY = "\033[0;90m";
 my $NC = "\033[0m"; # No Color
 
 my %opts;
@@ -65,6 +66,16 @@ sub parse_size {
 sub may_get_image {
     my ($env_file) = @_;
     -e $env_file && read_file($env_file) =~ m!^image=([\w:./-]+)$!m && $1
+}
+
+sub image_exists { 
+    system("docker inspect --format ' ' $_[0] >/dev/null 2>&1") == 0
+}
+
+sub image_id { 
+    my $s = `docker inspect --format '{{.ID}}' $_[0] 2>/dev/null`;
+    chomp $s;
+    $s
 }
 
 # returns  containers which should be re-created with the new image
@@ -255,9 +266,40 @@ sub purge {
     while (purge_unused_images($all_appsv)) {}
 }
 
+sub may_clean_and_tag_image_prev {
+    my ($image, $image_prev, $prev_id) = @_;
+
+    if (!$prev_id) {
+        # there was no main tag, nothing to do
+    } elsif (system("docker image remove $prev_id >/dev/null 2>&1") == 0) {
+        # the previous image was unused, nothing to do
+    } else {               
+        my $current_prev = image_id($image_prev);
+        if ($current_prev eq $prev_id) {
+            # the previous main tag was also prev tag, weird but no a pb
+        } else {
+            if ($current_prev) {
+                # NB: we use image id instead of tag, since local build tags can be removed even if child images
+                if (system("docker image remove $current_prev >/dev/null 2>&1") == 0) {
+                    log_("removed unused $image_prev");
+                } else {
+                    log_("saving previous prev image as ${image_prev}2");
+                    sys("docker tag $current_prev ${image_prev}2");
+                    print "${RED}Too many old $image (${image_prev}2, $image_prev), you must upgrade things!!${NC}\n";
+                }
+            }
+            log_("saving previous image as $image_prev");
+            sys("docker tag $prev_id $image_prev");
+        }
+    }
+}
+
 sub build {
     my ($app, $isRunOnce) = @_;
     my $image = $isRunOnce ? "up1-once-$app" : "up1-$app";
+
+    my $prev_id = image_id($image);
+
     my $opts = $isRunOnce ? "-f $app/runOnce.dockerfile" : '';
     my $cmd = "docker build $opts -t $image $app/";
     log_($cmd);
@@ -280,6 +322,12 @@ sub build {
         exit 1;
     };
     print "\n" if $status eq 'built';
+
+    if ($status ne 'from_cache') {
+        # ensure old image does not appear as <none>:<none> in "docker images"
+        may_clean_and_tag_image_prev($image, "$image:prev", $prev_id);
+    }
+
     $status
 }
 
@@ -291,6 +339,8 @@ sub may_build_many {
     } @$appsv;
 
     my %previously_built = map { /^up1-(.*):latest/ ? ($1 => 1) : () } `docker image ls --format '{{.Repository}}:{{.Tag}}'`;
+
+    my $all_appsv;
 
     my $rec; $rec = sub {
         my ($app, $child) = @_;
@@ -309,7 +359,10 @@ sub may_build_many {
         if (my $parent = $appv->{$isRunOnce ? 'FROM_runOnce_up1' : 'FROM_up1'}) {
             my $parent_modified = $rec->($parent, $app);
         }
+
+        purge($all_appsv ||= all_appsv()); # purge before is needed to ensure unused $image:prev is removed
         $built{$app} = build($app, $isRunOnce);
+
         $built{$app}
     };
 
