@@ -25,6 +25,7 @@ sub all_cmds {
         build => '--only-run --verbose __ALL_OR_APPS',
         run => '--if-old --verbose --logsf __ALL_OR_APPS',
         runOnce => 'RUN_ONCE',
+        purge => '',
         ps => '--quiet --check-image-old APPS',
         rights => '--quiet __ALL_OR_APPS',
         'stop-rm' => '--quiet __ALL_OR_APPS',

@@ -411,6 +411,7 @@ usage:
     $0 build [--only-run] [--verbose] { --all | <app> ... }
     $0 { run | build-run } [--if-old] [--verbose] [--logsf] { --all | <app> ... }
     $0 { runOnce | build-runOnce | runOnce-run } [--quiet] <app> [--cd <dir|subdir>] <args...>
+    $0 purge
     $0 ps [--quiet] [--check-image-old] [<app> ... ]
     $0 rights [--quiet] { --all | <app> ... }
     $0 stop-rm [--quiet] { --all | <app> ... }
@@ -421,9 +422,10 @@ if ($> != 0 ) {
   die("Re-lancer avec sudo\n");
 }
 
-my ($want_upgrade, $want_build, $want_pull, $want_run, $want_build_runOnce, $want_runOnce, $want_ps, $want_stop_rm);
+my ($want_upgrade, $want_purge, $want_build, $want_pull, $want_run, $want_build_runOnce, $want_runOnce, $want_ps, $want_stop_rm);
 my %actions = (
     'build' => sub { $want_build = 1 },
+    'purge' => sub { $want_purge = 1 },
     'pull' => sub { $want_pull = $want_ps = $opts{check_image_old} = 1 },
     'run' => sub { $want_run = 1 },
     'build-run' => sub { $want_build = $want_run = 1 },
@@ -454,7 +456,7 @@ while (1) {
 }
 
 my @apps;
-if (@ARGV ? $ARGV[0] eq "--all" : $want_ps || $want_upgrade) {
+if (@ARGV ? $ARGV[0] eq "--all" : $want_ps || $want_upgrade || $want_purge) {
     @apps = glob("*/");
     $opts{all} = 1;
 } elsif (@ARGV) {
@@ -489,6 +491,10 @@ apply_rights($_) foreach @apps;
 
 my @appsv = map { compute_app_vars($_) } @apps;
 
+if ($want_purge) {
+    $opts{verbose} = 1;
+    purge([@appsv]);
+}
 if ($want_pull) {
     pull($_) foreach @appsv;
 }
