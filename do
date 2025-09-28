@@ -378,10 +378,18 @@ sub may_pull {
     my ($image) = @_;
     if ($image && $image !~ /^up1-/ && !$pulled{$image}) {
         # ce n'est pas une image locale, on demande la dernière version (pour les rolling tags)
+
+        my $prev_id = image_id($image);
+
         print STDERR "${YELLOW}docker pull $image${NC}\n";
         sys("docker", "pull", $image);
         print "\n";
         $pulled{$image} = 1;
+
+        my $new_id = image_id($image);
+        if ($new_id ne $prev_id) {
+            may_clean_and_tag_image_prev($image, "$image-prev", $prev_id);
+        }
     }
 }
 
