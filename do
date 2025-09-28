@@ -581,7 +581,7 @@ if ($> != 0 ) {
 
 my ($want_upgrade, $want_purge, $want_build, $want_pull, $want_run, $want_build_runOnce, $want_runOnce, $want_ps, $want_images, $want_stop_rm);
 my %actions = (
-    'build' => sub { $want_build = 1 },
+    'build' => sub { $want_build = $want_build_runOnce = 1 },
     'purge' => sub { $want_purge = 1 },
     'images' => sub { $want_images = 1 },
     'pull' => sub { $want_pull = $want_ps = $opts{check_image_old} = 1 },
