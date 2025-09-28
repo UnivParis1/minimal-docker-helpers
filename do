@@ -564,7 +564,7 @@ sub usage {
 usage: 
     $0 upgrade [--verbose] [<app> ...]
     $0 pull [--only-run] { --all | <app> ... }
-    $0 build [--only-run] [--verbose] { --all | <app> ... }
+    $0 build [--only-run] [--only-runOnce] [--verbose] { --all | <app> ... }
     $0 { run | build-run } [--if-old] [--verbose] [--logsf] { --all | <app> ... }
     $0 { runOnce | build-runOnce | runOnce-run } [--quiet] <app> [--cd <dir|subdir>] <args...>
     $0 purge
@@ -603,7 +603,7 @@ chdir '/opt/dockers' or die;
 
 while (1) {
     @ARGV or last;
-    if (my ($opt) = grep { $ARGV[0] eq $_ } "--only-run", "--logsf", "--quiet", "--verbose", "--if-old", "--check-image-old") {
+    if (my ($opt) = grep { $ARGV[0] eq $_ } "--only-run", "--only-runOnce", "--logsf", "--quiet", "--verbose", "--if-old", "--check-image-old") {
         shift;
         $opt =~ s/^--//;
         $opt =~ s/-/_/g;
@@ -656,7 +656,7 @@ if ($want_purge) {
 if ($want_pull) {
     pull($_) foreach @appsv;
 }
-if ($want_build) {
+if ($want_build && !$opts{only_runOnce}) {
     may_build_many([@appsv], '') ;
     print STDERR "${YELLOW}Aucune image modifiée${NC}\n\n" if !grep { $built{$_} ne 'from_cache' } keys %built;
 }
