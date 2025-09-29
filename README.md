@@ -77,7 +77,7 @@ Conventions :
   * /webhome/toto/webapps/ : où déployer
   * /var/log/toto/tomcat/ : contient les logs tomcat
   * /var/lib/sessions-toto/ : contient les sessions pendant le redémarrage
-  * /var/log/docker/toto.log : contient les logs FPM + les "[error_log](https://github.com/prigaux/notes/blob/main/FPM-et-messages-de-logs-de-PHP.md)" (ajoutés via "syslog")
+  * /var/log/docker/toto.log : contient les logs stdout
 
 Ajout d'une application
 
@@ -133,6 +133,7 @@ Conventions :
   * /webhome/toto/www/ : contient les fichiers PHP exécutable par FPM
   * /webhome/toto/.run/fpm.sock : Unix Socket à fournir à apache2/nginx
   * /var/lib/php/sessions-toto/ : contient les sessions
+  * /var/log/docker/toto.log : contient les logs FPM + les "[error_log](https://github.com/prigaux/notes/blob/main/FPM-et-messages-de-logs-de-PHP.md)" (ajoutés via "syslog")
 
 Ajout d'une application
   * créer un utilisateur local dans /webhome/toto et mettre les fichiers dans /webhome/toto/www
