@@ -66,6 +66,7 @@ dans run.env :
   * `$maxActiveSessionsGoal` : permet de limiter le nombre de sessions. Si le nombre de sessions dépasse ce nombre, les vieilles sessions sont supprimées. A utiliser avec précaution
   * `$remoteIpInternalProxies` : par défaut autorise uniquement les frontaux localhost
   * `$MaxHeapSize` : configure la RAM utilisée par Java (par défaut 25% de la RAM)
+  * `$maxHttpHeaderSize`: configure la taille max des headers HTTP (utile notamment derrière un Shibboleth SP et beaucoup de memberOf)
 
 
 ## Ajout d'une application

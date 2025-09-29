@@ -53,7 +53,7 @@ install -d -o $user -m 700 /var/lib/sessions-$user
 rw_vols="$rw_vols /var/lib/sessions-$user:/var/lib/sessions"
 
 
-CATALINA_OPTS="$CATALINA_OPTS -Dhttp_port=$port -DmaxPostSize=$maxPostSize -DmaxParameterCount=$maxParameterCount -DmaxActiveSessionsGoal=$maxActiveSessionsGoal -Dmanager_password='$manager_password' -DremoteIpInternalProxies='$remoteIpInternalProxies'"
+CATALINA_OPTS="$CATALINA_OPTS -Dhttp_port=$port -DmaxHttpHeaderSize=$maxHttpHeaderSize -DmaxPostSize=$maxPostSize -DmaxParameterCount=$maxParameterCount -DmaxActiveSessionsGoal=$maxActiveSessionsGoal -Dmanager_password='$manager_password' -DremoteIpInternalProxies='$remoteIpInternalProxies'"
 CATALINA_OPTS="$CATALINA_OPTS -Dorg.apache.catalina.session.StandardSession.ACTIVITY_CHECK=true"
 if [ -n "$MaxHeapSize" ]; then
     CATALINA_OPTS="$CATALINA_OPTS -XX:MaxHeapSize=$MaxHeapSize"
@@ -68,6 +68,7 @@ _may_rename_kill_or_rm TERM
 
 if [ -n "$VERBOSE" ]; then
     echo "  using http_proxy $port"
+    if [ -n "$maxHttpHeaderSize" ]; then echo "  using maxHttpHeaderSize $maxHttpHeaderSize"; fi
     if [ -n "$maxPostSize" ]; then echo "  using maxPostSize $maxPostSize"; fi
     if [ -n "$maxParameterCount" ]; then echo "  using maxParameterCount $maxParameterCount"; fi
     if [ -n "$maxActiveSessionsGoal" ]; then echo "  using maxActiveSessionsGoal $maxActiveSessionsGoal"; fi
