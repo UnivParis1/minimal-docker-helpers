@@ -1,0 +1,6 @@
+#!/bin/bash
+# call it as <script> library/<repo> <tag>
+repo=$1
+tag=$2
+token=$(curl -sS "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$repo:pull"  | perl -lne 'print $1 if /"token":"([^"]*)/')
+curl -sS -i --head https://registry-1.docker.io/v2/$repo/manifests/$tag -H "Authorization: Bearer $token" | sed -n 's/^docker-content-digest: //p'
