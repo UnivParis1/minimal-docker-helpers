@@ -1,0 +1,17 @@
+#!/bin/bash -e
+# call it as <script> [digest|config] library/<repo> <tag>
+action=$1
+repo=$2
+tag=$3
+token=$(curl -sS "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$repo:pull"  | perl -lne 'print $1 if /"token":"([^"]*)/')
+if [ -z "$token" ]; then
+   echo "error accessing auth.docker.io" >&2
+   exit 1
+fi
+if [ $action = digest ]; then
+    curl -sS -i --head https://registry-1.docker.io/v2/$repo/manifests/$tag -H "Authorization: Bearer $token" | sed -n 's/^docker-content-digest: //p'
+else
+    digest=$(curl -sS  https://registry-1.docker.io/v2/$repo/manifests/$tag -H "Authorization: Bearer $token"  | jq -r '.manifests[0].digest')
+    config_digest=$(curl -sL -H "Authorization: Bearer $token"      https://registry-1.docker.io/v2/$repo/blobs/$digest | jq -r .config.digest)
+    curl -sL -H "Authorization: Bearer $token"      https://registry-1.docker.io/v2/$repo/blobs/$config_digest | jq .config
+fi
