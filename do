@@ -555,6 +555,7 @@ sub run_once {
     log_(qq(Running "container_name=$appv->{name} $appv->{runOnce_file} @ARGV"));
     $ENV{container_name} = $appv->{name};
     $ENV{QUIET} = $opts{quiet};
+    $ENV{VERBOSE} = $opts{verbose};
     sys($appv->{runOnce_file}, @ARGV);
 
 }
@@ -774,8 +775,6 @@ if (@ARGV ? $ARGV[0] eq "--all" : $want_ps || $want_upgrade || $want_purge || $w
         @apps = shift;
     } else {
         @apps = @ARGV;
-        # tell run.sh to be verbose
-        $opts{verbose} = $ENV{VERBOSE} = 1;
     }
 } else {
     usage();
