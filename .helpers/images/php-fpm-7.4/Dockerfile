@@ -5,8 +5,7 @@
 # - mbstring (paquets debian ajoutés manuellement car très utiles)
 FROM debian:bullseye-slim
 
-# faire dépendre le docker cache des mises à jour de sécurité est mis à jour
-ADD https://security.debian.org/debian-security/dists/bullseye-security/InRelease /root/bullseye-security-InRelease
+COPY .Dockerfile.cache-buster /root/
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/No-Recommends
