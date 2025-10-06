@@ -27,6 +27,7 @@ sub all_cmds {
         runOnce => 'RUN_ONCE',
         purge => '',
         images => '',
+        'check-updates' => '--verbose __ALL_OR_APPS',
         ps => '--quiet --check-image-old APPS',
         rights => '--quiet __ALL_OR_APPS',
         'stop-rm' => '--quiet __ALL_OR_APPS',
