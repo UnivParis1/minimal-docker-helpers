@@ -13,6 +13,15 @@ sub write_file {
     open(my $F, '>', $f) or die "failed to write $f: $?\n";
     print $F $_ foreach @l;
 }
+sub rm_rf {
+    my ($f) = @_;
+    if (-d $f) {
+        rm_rf($_) foreach glob("$f/*");
+        rmdir $f or die "rmdir $f failed";
+    } elsif (-e $f) {
+        unlink $f or die "rm $f failed";
+    }
+}
 sub sys {
     system(@_) == 0 or die "@_ failed";
 }
@@ -213,6 +222,102 @@ EOS
         sub { "Installing $_[0] in $_[1]\n" });
 }
 
+sub check_updates_using_package_manager {
+    my ($app2appsv, $appsv) = @_;
+
+    my %images;
+    my $may_add = sub {
+        my ($appv, $isRunOnce) = @_;
+        my $app = $appv->{name};
+        my $image = $isRunOnce ? "up1-once-$app" : "up1-$app";
+        my $e = $images{$image};
+        if (!$e) {
+            my $cache_buster_dir = cache_buster_dir_rec($app2appsv, $appv, $isRunOnce) or return;
+            $images{$image} ||= $e = { apps => [], cache_buster_file => "$cache_buster_dir/$image" };
+        }
+        push @{$e->{apps}}, $isRunOnce ? "$app(runOnce)" : $app;
+    };
+    foreach my $appv (@$appsv) {
+        $may_add->($appv, 0) if $appv->{FROM};
+        $may_add->($appv, 1) if $appv->{FROM_runOnce};
+    }
+    foreach my $image (sort keys %images) {
+        my $e = $images{$image};
+        my $apps = join(",", @{$e->{apps}});
+        log_("${GRAY}Checking updates using package manager in image $image (used by $apps) ${NC}");
+        if (my $updates = `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --entrypoint=sh $image`) {
+            print "Found package manager updates for $image (used by $apps)\n";
+            write_file($e->{cache_buster_file}, $updates);
+            log_("${YELLOW}$updates$NC");
+        }
+    }
+
+
+}
+
+sub get_parent_image {
+    my ($app2appsv, $appv, $isRunOnce) = @_;
+
+    while (1) {
+        my $image = $appv->{$isRunOnce ? 'image_runOnce' : 'image'} || $appv->{$isRunOnce ? 'FROM_runOnce' : 'FROM'} or return;
+        if (my $parent = FROM_to_name($image)) {
+            $isRunOnce = 0; # we are reusing non runOnce image 
+            $appv = $app2appsv->{$parent};
+        } else {
+            return $image;
+        }
+    }
+}
+
+sub check_image_updates {
+    my ($app2appsv, $appsv) = @_;
+
+    my %images;
+    foreach my $appv (@$appsv) {
+        if (my $image = get_parent_image($app2appsv, $appv, 0)) {
+            push @{$images{$image}}, $appv->{name};
+        }
+        if (my $image = get_parent_image($app2appsv, $appv, 1)) {
+            push @{$images{$image}}, "$appv->{name}(runOnce)";
+        }
+    }
+
+    foreach my $image (sort keys %images) {
+        if ($image =~ /\d+[.]\d+[.]\d+$/) {
+            # no need to check such precise images, they do not get updates
+            next;
+        }
+        if ($image =~ /^debian:/) {
+            # no need to check debian based distro: everything can be upgraded via "apt upgrade" which we always do
+            next;
+        }
+        my $apps = join(",", @{$images{$image}});
+        log_("${GRAY}Checking docker.io registry for $image update (used by $apps)${NC}");
+        
+        my ($current) = `docker inspect --format '{{index .RepoDigests 0}}' $image` =~ /@(.*)/;
+        
+        my ($repo, $tag) = split(":", $image);
+        $repo = "library/$repo" if $repo !~ m!/!;
+        my ($new) = `/opt/dockers/.helpers/get-image-info-from-docker.io-registry digest $repo $tag` =~ /(\S+)/;
+
+        if (!$new) {
+            print "${RED}ERROR getting latest image $image${NC}\n";
+        } elsif ($new ne $current) {
+            print "Found docker image update for $image (used by $apps)\n";
+            $opts{verbose} and system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.Env[]' | grep VERSION | diff --color=always --palette='de=90:ad=33' -U0 <(docker inspect --format '{{json .Config.Env}}' $image | jq -r '.[]' | grep VERSION) - | tail -n +4));
+        } else {
+            log_("${GRAY}=> $image is up-to-date${NC}");
+        }
+    }
+}
+
+sub check_updates_many {
+    my ($appsv) = @_;
+    my %app2appsv = map { $_->{name} => $_ } @{all_appsv()};
+    check_updates_using_package_manager(\%app2appsv, $appsv);
+    check_image_updates(\%app2appsv, $appsv);
+}
+
 sub purge_exited_containers {
     my ($all_appsv) = @_;
 
@@ -294,11 +399,47 @@ sub may_clean_and_tag_image_prev {
     }
 }
 
+sub cache_buster_dir {
+    my ($app, $isRunOnce) = @_;
+
+    my $dockerfile = $isRunOnce ? "runOnce.dockerfile" : "Dockerfile";
+    -f "$app/$dockerfile" or return undef;
+
+    my $cache_buster_dir = ".$dockerfile.cache-buster";   
+    read_file("$app/$dockerfile") =~ /^COPY \Q$cache_buster_dir/m or return undef;
+    
+    "$app/$cache_buster_dir"
+}
+
+# on cherche le plus proche parent ayant "COPY .Dockerfile.cache-buster /root/" (normalement un seul parent à cet instruction)
+sub cache_buster_dir_rec {
+    my ($app2appsv, $appv, $isRunOnce) = @_;
+
+    while (1) {
+        my $parent_image = $appv->{$isRunOnce ? 'FROM_runOnce' : 'FROM'} or return;
+
+        if (my $dir = cache_buster_dir($appv->{name}, $isRunOnce)) {
+            return $dir;
+        }
+
+        my $parent = FROM_to_name($parent_image) or return;
+        $isRunOnce = 0; # we are reusing non runOnce image 
+        $appv = $app2appsv->{$parent};
+    }
+}
+
 sub build {
     my ($app, $isRunOnce) = @_;
     my $image = $isRunOnce ? "up1-once-$app" : "up1-$app";
 
     my $prev_id = image_id($image);
+
+    if (my $cache_buster_dir = cache_buster_dir($app, $isRunOnce)) {
+        if (! -d $cache_buster_dir) {
+            log_("creating $cache_buster_dir");
+            mkdir $cache_buster_dir;
+        }
+    }
 
     my $opts = $isRunOnce ? "-f $app/runOnce.dockerfile" : '';
     my $cmd = "docker build $opts -t $image $app/";
@@ -375,7 +516,7 @@ sub may_build_many {
 
 my %pulled;
 sub may_pull {
-    my ($image) = @_;
+    my ($image, $cache_buster_dir) = @_;
     if ($image && $image !~ /^up1-/ && !$pulled{$image}) {
         # ce n'est pas une image locale, on demande la dernière version (pour les rolling tags)
 
@@ -389,6 +530,7 @@ sub may_pull {
         my $new_id = image_id($image);
         if ($new_id ne $prev_id) {
             may_clean_and_tag_image_prev($image, "$image-prev", $prev_id);
+            rm_rf($cache_buster_dir) if $cache_buster_dir; # ce répertoire n'est plus nécessaire car le cache build est invalidé par le chgt de FROM
         }
     }
 }
@@ -397,8 +539,8 @@ sub pull {
     my ($appv) = @_;
     may_pull($appv->{image});
     may_pull($appv->{image_runOnce}) if !$opts{only_run};
-    may_pull($appv->{FROM});
-    may_pull($appv->{FROM_runOnce}) if !$opts{only_run};
+    may_pull($appv->{FROM},         cache_buster_dir($appv->{name}, 0));
+    may_pull($appv->{FROM_runOnce}, cache_buster_dir($appv->{name}, 1)) if !$opts{only_run};
 }
 
 sub run {
@@ -577,6 +719,7 @@ usage:
     $0 { runOnce | build-runOnce | runOnce-run } [--quiet] <app> [--cd <dir|subdir>] <args...>
     $0 purge
     $0 images
+    $0 check-updates [--verbose] { --all | <app> ... }
     $0 ps [--quiet] [--check-image-old] [<app> ... ]
     $0 rights [--quiet] { --all | <app> ... }
     $0 stop-rm [--quiet] { --all | <app> ... }
@@ -587,9 +730,10 @@ if ($> != 0 ) {
   die("Re-lancer avec sudo\n");
 }
 
-my ($want_upgrade, $want_purge, $want_build, $want_pull, $want_run, $want_build_runOnce, $want_runOnce, $want_ps, $want_images, $want_stop_rm);
+my ($want_upgrade, $want_check_updates, $want_purge, $want_build, $want_pull, $want_run, $want_build_runOnce, $want_runOnce, $want_ps, $want_images, $want_stop_rm);
 my %actions = (
     'build' => sub { $want_build = $want_build_runOnce = 1 },
+    'check-updates' => sub { $want_check_updates = 1 },
     'purge' => sub { $want_purge = 1 },
     'images' => sub { $want_images = 1 },
     'pull' => sub { $want_pull = $want_ps = $opts{check_image_old} = 1 },
@@ -660,6 +804,9 @@ my @appsv = map { compute_app_vars($_) } @apps;
 if ($want_purge) {
     $opts{verbose} = 1;
     purge([@appsv]);
+}
+if ($want_check_updates) {
+    check_updates_many([@appsv]);
 }
 if ($want_pull) {
     pull($_) foreach @appsv;
