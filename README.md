@@ -132,7 +132,7 @@ rw_vols="/var/cache/toto"
 Conventions :
   * /webhome/toto/www/ : contient les fichiers PHP exécutable par FPM
   * /webhome/toto/.run/fpm.sock : Unix Socket à fournir à apache2/nginx
-  * /var/lib/php/sessions-toto/ : contient les sessions
+  * /var/lib/php/sessions-toto/ : contient les sessions (⚠ la purge du paquet hôte php-common supprime /var/lib/php)
   * /var/log/docker/toto.log : contient les logs FPM + les "[error_log](https://github.com/prigaux/notes/blob/main/FPM-et-messages-de-logs-de-PHP.md)" (ajoutés via "syslog")
 
 Ajout d'une application
