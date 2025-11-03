@@ -13,5 +13,5 @@ if [ $action = digest ]; then
 else
     digest=$(curl -sS  https://registry-1.docker.io/v2/$repo/manifests/$tag -H "Authorization: Bearer $token"  | jq -r '.manifests[0].digest')
     config_digest=$(curl -sL -H "Authorization: Bearer $token"      https://registry-1.docker.io/v2/$repo/blobs/$digest | jq -r .config.digest)
-    curl -sL -H "Authorization: Bearer $token"      https://registry-1.docker.io/v2/$repo/blobs/$config_digest | jq .config
+    curl -sL -H "Authorization: Bearer $token"      https://registry-1.docker.io/v2/$repo/blobs/$config_digest
 fi

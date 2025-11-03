@@ -304,7 +304,15 @@ sub check_image_updates {
             print "${RED}ERROR getting latest image $image${NC}\n";
         } elsif ($new ne $current) {
             print "Found docker image update for $image (used by $apps)\n";
-            $opts{verbose} and system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.Env[]' | grep VERSION | diff --color=always --palette='de=90:ad=33' -U0 <(docker inspect --format '{{json .Config.Env}}' $image | jq -r '.[]' | grep VERSION) - | tail -n +4));
+
+            # Display a diff of Dockerfile commands (from "docker history")
+            # useful to show change of versions. eg:
+            # -ADD alpine-minirootfs-3.22.1-x86_64.tar.gz /
+            # +ADD alpine-minirootfs-3.22.2-x86_64.tar.gz /
+            # or
+            # -ENV TOMCAT_VERSION=10.1.47
+            # +ENV TOMCAT_VERSION=10.1.48
+            $opts{verbose} and system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//' | diff --ignore-all-space --color=always --palette='de=90:ad=33' -U0 <(docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//' ) - | tail -n +4));
         } else {
             log_("${GRAY}=> $image is up-to-date${NC}");
         }
