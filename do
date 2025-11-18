@@ -748,7 +748,7 @@ my %actions = (
     'pull' => sub { $want_pull = $want_ps = $opts{check_image_old} = 1 },
     'run' => sub { $want_run = 1 },
     'build-run' => sub { $want_build = $want_run = 1 },
-    'upgrade' => sub { $want_build = $want_build_runOnce = $want_pull = $want_run = $want_upgrade = $opts{if_old} = $opts{only_run} = 1 },
+    'upgrade' => sub { $want_build = $want_build_runOnce = $want_pull = $want_run = $want_upgrade = $opts{if_old} = 1 },
     'runOnce' => sub { $want_runOnce = 1 },
     'build-runOnce' => sub { $want_build_runOnce = $want_runOnce = 1 },
     'runOnce-run' => sub { $want_runOnce = $want_run = 1 },
