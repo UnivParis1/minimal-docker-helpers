@@ -495,7 +495,7 @@ sub may_build_many {
         my ($app, $child) = @_;
 
         my $appv = delete $todo{$app};
-        if ($built{$app}) {
+        if ($built{"$app $isRunOnce"}) {
             # rien à faire :-)
             return
         }        
@@ -510,9 +510,9 @@ sub may_build_many {
         }
 
         purge($all_appsv ||= all_appsv()); # purge before is needed to ensure unused $image:prev is removed
-        $built{$app} = build($app, $isRunOnce);
+        $built{"$app $isRunOnce"} = build($app, $isRunOnce);
 
-        $built{$app}
+        $built{"$app $isRunOnce"}
     };
 
     while (%todo) {
