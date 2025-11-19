@@ -13,6 +13,12 @@ sub write_file {
     open(my $F, '>', $f) or die "failed to write $f: $?\n";
     print $F $_ foreach @l;
 }
+sub write_tempfile {
+    require File::Temp;
+    my ($F, $file) = File::Temp::tempfile();
+    print $F $_ foreach @_;
+    $file
+}
 sub rm_rf {
     my ($f) = @_;
     if (-d $f) {
@@ -315,9 +321,15 @@ sub check_image_updates {
             # -ENV TOMCAT_VERSION=10.1.47
             # +ENV TOMCAT_VERSION=10.1.48
             if (!$opts{quiet}) {
+                require File::Temp;
+                my $old = write_tempfile(`docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//'`);
+                my $new = write_tempfile(`/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//'`);
+                
                 my $color = $opts{no_color} ? 'never' : 'always';
-                system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//' | diff --ignore-all-space --color=$color --palette='de=90:ad=33' -U0 <(docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//' ) - | tail -n +4));
+                system(qq(diff --ignore-all-space --color=$color --palette='de=90:ad=33' -U0 $old $new | tail -n +4));
                 print "\n";
+                unlink $old;
+                unlink $new;
             } 
         } else {
             log_("$c{GRAY}=> $image is up-to-date$c{NC}");
