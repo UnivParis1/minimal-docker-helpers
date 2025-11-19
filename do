@@ -802,7 +802,7 @@ apply_rights($_) foreach @apps;
 @apps = grep {
     my $ignore = -e "$_/IGNORE" || -e "$_/SYSTEMD";
     if ($ignore) {
-        $opts{quiet} or print "${GRAY}$_ ignoré (supprimer le fichier $_/IGNORE pour réactiver)${NC}\n";
+        $opts{quiet} or print STDERR "${GRAY}$_ ignoré (supprimer le fichier $_/IGNORE pour réactiver)${NC}\n";
     }
     !$ignore
 } @apps;
