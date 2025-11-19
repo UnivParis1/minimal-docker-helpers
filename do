@@ -250,7 +250,7 @@ sub check_updates_using_package_manager {
         if (my $updates = `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --entrypoint=sh $image`) {
             print "Found package manager updates for $image (used by $apps)\n";
             write_file($e->{cache_buster_file}, $updates);
-            print "$c{YELLOW}$updates$c{NC}" if !$opts{quiet};
+            print "$c{YELLOW}$updates$c{NC}\n" if !$opts{quiet};
         }
     }
 
@@ -317,6 +317,7 @@ sub check_image_updates {
             if (!$opts{quiet}) {
                 my $color = $opts{no_color} ? 'never' : 'always';
                 system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//' | diff --ignore-all-space --color=$color --palette='de=90:ad=33' -U0 <(docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//' ) - | tail -n +4));
+                print "\n";
             } 
         } else {
             log_("$c{GRAY}=> $image is up-to-date$c{NC}");
