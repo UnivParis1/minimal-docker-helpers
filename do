@@ -38,11 +38,13 @@ sub difference {
     grep { !$to_remove{$_} } @$a;
 }
 
-my $GREEN = "\033[0;32m";
-my $YELLOW = "\033[0;33m";
-my $RED = "\033[0;31m";
-my $GRAY = "\033[0;90m";
-my $NC = "\033[0m"; # No Color
+my %c = (
+  GREEN => "\033[0;32m",
+  YELLOW => "\033[0;33m",
+  RED => "\033[0;31m",
+  GRAY => "\033[0;90m",
+  NC => "\033[0m", # No Color
+);
 
 my %opts;
 
@@ -244,11 +246,11 @@ sub check_updates_using_package_manager {
     foreach my $image (sort keys %images) {
         my $e = $images{$image};
         my $apps = join(",", @{$e->{apps}});
-        log_("${GRAY}Checking updates using package manager in image $image (used by $apps) ${NC}");
+        log_("$c{GRAY}Checking updates using package manager in image $image (used by $apps) $c{NC}");
         if (my $updates = `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --entrypoint=sh $image`) {
             print "Found package manager updates for $image (used by $apps)\n";
             write_file($e->{cache_buster_file}, $updates);
-            print "${YELLOW}$updates$NC" if !$opts{quiet};
+            print "$c{YELLOW}$updates$c{NC}" if !$opts{quiet};
         }
     }
 
@@ -292,7 +294,7 @@ sub check_image_updates {
             next;
         }
         my $apps = join(",", @{$images{$image}});
-        log_("${GRAY}Checking docker.io registry for $image update (used by $apps)${NC}");
+        log_("$c{GRAY}Checking docker.io registry for $image update (used by $apps)$c{NC}");
         
         my ($current) = `docker inspect --format '{{index .RepoDigests 0}}' $image` =~ /@(.*)/;
         
@@ -301,7 +303,7 @@ sub check_image_updates {
         my ($new) = `/opt/dockers/.helpers/get-image-info-from-docker.io-registry digest $repo $tag` =~ /(\S+)/;
 
         if (!$new) {
-            print "${RED}ERROR getting latest image $image${NC}\n";
+            print "$c{RED}ERROR getting latest image $image$c{NC}\n";
         } elsif ($new ne $current) {
             print "Found docker image update for $image (used by $apps)\n";
 
@@ -314,7 +316,7 @@ sub check_image_updates {
             # +ENV TOMCAT_VERSION=10.1.48
             $opts{quiet} or system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//' | diff --ignore-all-space --color=always --palette='de=90:ad=33' -U0 <(docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//' ) - | tail -n +4));
         } else {
-            log_("${GRAY}=> $image is up-to-date${NC}");
+            log_("$c{GRAY}=> $image is up-to-date$c{NC}");
         }
     }
 }
@@ -398,7 +400,7 @@ sub may_clean_and_tag_image_prev {
                 } else {
                     log_("saving previous prev image as ${image_prev}2");
                     sys("docker tag $current_prev ${image_prev}2");
-                    print "${RED}Too many old $image (${image_prev}2, $image_prev), you must upgrade things!!${NC}\n";
+                    print "$c{RED}Too many old $image (${image_prev}2, $image_prev), you must upgrade things!!$c{NC}\n";
                 }
             }
             log_("saving previous image as $image_prev");
@@ -453,7 +455,7 @@ sub build {
     my $cmd = "docker build $opts -t $image $app/";
     log_($cmd);
     open(my $F, "$cmd |");
-    my @may_show = "${YELLOW}Building image $image${NC}\n";
+    my @may_show = "$c{YELLOW}Building image $image$c{NC}\n";
     my $out;
     my $status = 'from_cache';
     while (<$F>) {
@@ -530,7 +532,7 @@ sub may_pull {
 
         my $prev_id = image_id($image);
 
-        print STDERR "${YELLOW}docker pull $image${NC}\n";
+        print STDERR "$c{YELLOW}docker pull $image$c{NC}\n";
         sys("docker", "pull", $image);
         print "\n";
         $pulled{$image} = 1;
@@ -575,7 +577,7 @@ sub may_run_many {
     if ($opts{if_old}) {
         my %old_containers = map { $_ => 1 } old_containers();
         @l = grep { $old_containers{$_->{name}} } @l;
-        @l or print "${YELLOW}Aucun conteneurs à re-créer${NC}\n";
+        @l or print "$c{YELLOW}Aucun conteneurs à re-créer$c{NC}\n";
     }
 
     my $all_appsv = $opts{all} ? $appsv : all_appsv();
@@ -593,14 +595,14 @@ sub get_states {
 sub ps {
     my ($app, $states, $old_containers, $old_or_missing_images) = @_;
     my $state = $states->{$app} || 'missing';
-    my $old = $old_containers->{$app} ? " ${YELLOW}(containeur needs rerun)$NC" : '';
-    my $image_state = $old_or_missing_images->{$app} ? " ${YELLOW}(image is $old_or_missing_images->{$app})$NC" : '';
+    my $old = $old_containers->{$app} ? " $c{YELLOW}(containeur needs rerun)$c{NC}" : '';
+    my $image_state = $old_or_missing_images->{$app} ? " $c{YELLOW}(image is $old_or_missing_images->{$app})$c{NC}" : '';
     if ($state eq 'running') {
         if (!$opts{quiet} || $old || $image_state) {
-            printf "%s $GREEN%s$NC%s\n", $app, $state, $old . $image_state;
+            printf "%s $c{GREEN}%s$c{NC}%s\n", $app, $state, $old . $image_state;
         }
     } else {
-        printf "%s $RED%s$NC\n", $app, uc($state);
+        printf "%s $c{RED}%s$c{NC}\n", $app, uc($state);
     }
 }
 
@@ -667,7 +669,7 @@ sub images {
         $h->{containers} = $id_or_name_to_containers->{$id} || $id_or_name_to_containers->{$name};
 
         if (my ($isRunOnce, $app) = $name =~ /^up1-(once-)?([^:]*)/) {
-            my ($appv) = grep { $_->{name} eq $app } @$appsv or warn("${RED}unknown image $name${NC}\n"), next;
+            my ($appv) = grep { $_->{name} eq $app } @$appsv or warn("$c{RED}unknown image $name$c{NC}\n"), next;
             $h->{app} = $app;
         }
         if ($images{$id}) {
@@ -686,11 +688,11 @@ sub images {
             my @parents = grep { $_ && $_->{name} ne $h->{name} } map { $images{$_} } @ids;
             my $parent = $parents[0];
             if (!$parent) {
-                $h->{parent} .= " $YELLOW(old)$NC";
+                $h->{parent} .= " $c{YELLOW}(old)$c{NC}";
             } else {
                 push @{$_->{children}}, $h->{name} foreach $parent;
                 $h->{parent} = $parent->{name};
-                $h->{parent} =~ s/([:-]prev\d*)?$/$YELLOW . ($1||'') . $NC/e;
+                $h->{parent} =~ s/([:-]prev\d*)?$/$c{YELLOW} . ($1||'') . $c{NC}/e;
                 my $delta = 0;
                 foreach (@history) {
                     last if $_->[0] eq $parent->{id};
@@ -704,18 +706,18 @@ sub images {
     $images{$_} = { name => $_, missing => 1, %{$expected_images{$_}} } foreach keys %expected_images;
 
     my $format = "%-45s %30s %10s   %-40s %-40s %s\n";
-    printf $format, "NAME$YELLOW$NC", 'CREATED' . $RED.$NC, 'SIZE', "PARENT $YELLOW$NC", 'CONTAINERS', 'ENFANTS';
+    printf $format, "NAME$c{YELLOW}$c{NC}", 'CREATED' . $c{RED}.$c{NC}, 'SIZE', "PARENT $c{YELLOW}$c{NC}", 'CONTAINERS', 'ENFANTS';
     foreach my $h (sort { $a->{name} cmp $b->{name} } values %images) {
-        $h->{name} =~ s/([:-]prev\d*)?$/$YELLOW . ($1||'') . $NC/e;
+        $h->{name} =~ s/([:-]prev\d*)?$/$c{YELLOW} . ($1||'') . $c{NC}/e;
         printf $format, 
             $h->{name}, 
-            $h->{missing} ? "${RED}missing${NC}" : $h->{CreatedSince} . $RED.$NC, 
+            $h->{missing} ? "$c{RED}missing$c{NC}" : $h->{CreatedSince} . $c{RED}.$c{NC}, 
             $h->{size} || '', 
-            $h->{parent} || " $YELLOW$NC", 
+            $h->{parent} || " $c{YELLOW}$c{NC}", 
             join(', ', @{$h->{containers_once} || []}) . ' ' .
-              ($h->{containers} ? "$GREEN" . join(', ', @{$h->{containers}}) . "$NC" :
-                $h->{children} || $h->{missing} || $h->{containers_once} || $h->{name} =~ /^up1-once-/ ? '' : "${YELLOW}unused${NC}"), 
-            "$GRAY" . join(', ', @{$h->{children} || []}) . "$NC";
+              ($h->{containers} ? "$c{GREEN}" . join(', ', @{$h->{containers}}) . "$c{NC}" :
+                $h->{children} || $h->{missing} || $h->{containers_once} || $h->{name} =~ /^up1-once-/ ? '' : "$c{YELLOW}unused$c{NC}"), 
+            $c{GRAY} . join(', ', @{$h->{children} || []}) . $c{NC};
     }
 }
 
@@ -802,7 +804,7 @@ apply_rights($_) foreach @apps;
 @apps = grep {
     my $ignore = -e "$_/IGNORE" || -e "$_/SYSTEMD";
     if ($ignore) {
-        $opts{quiet} or print STDERR "${GRAY}$_ ignoré (supprimer le fichier $_/IGNORE pour réactiver)${NC}\n";
+        $opts{quiet} or print STDERR "$c{GRAY}$_ ignoré (supprimer le fichier $_/IGNORE pour réactiver)$c{NC}\n";
     }
     !$ignore
 } @apps;
@@ -821,7 +823,7 @@ if ($want_pull) {
 }
 if ($want_build && !$opts{only_runOnce}) {
     may_build_many([@appsv], '') ;
-    print STDERR "${YELLOW}Aucune image modifiée${NC}\n\n" if !grep { $built{$_} ne 'from_cache' } keys %built;
+    print STDERR "$c{YELLOW}Aucune image modifiée$c{NC}\n\n" if !grep { $built{$_} ne 'from_cache' } keys %built;
 }
 if ($want_build_runOnce && !$opts{only_run}) {
     may_build_many([@appsv], 'runOnce');
