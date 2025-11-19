@@ -1,0 +1,4 @@
+MAILTO="pascal.rigaux@univ-paris1.fr"
+
+# every day, beetween 3h and 3h10
+00 3 * * * root /opt/dockers/do check-updates --no-color --random-delay=10m --all 2>/dev/null
