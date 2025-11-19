@@ -326,10 +326,16 @@ sub check_image_updates {
                 my $new = write_tempfile(`/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//'`);
                 
                 my $color = $opts{no_color} ? 'never' : 'always';
-                system(qq(diff --ignore-all-space --color=$color --palette='de=90:ad=33' -U0 $old $new | tail -n +4));
-                print "\n";
+                my $diff = `diff --ignore-all-space --color=$color --palette='de=90:ad=33' -U0 $old $new | tail -n +4`;
                 unlink $old;
                 unlink $new;
+                if ($diff) {
+                    print "$diff\n";
+                } elsif (my $updates = 
+                    # build command did not change, it must be a package change:
+                    `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --entrypoint=sh $image`) {
+                    print "$c{YELLOW}$updates$c{NC}\n";
+                }
             } 
         } else {
             log_("$c{GRAY}=> $image is up-to-date$c{NC}");
