@@ -314,7 +314,10 @@ sub check_image_updates {
             # or
             # -ENV TOMCAT_VERSION=10.1.47
             # +ENV TOMCAT_VERSION=10.1.48
-            $opts{quiet} or system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//' | diff --ignore-all-space --color=always --palette='de=90:ad=33' -U0 <(docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//' ) - | tail -n +4));
+            if (!$opts{quiet}) {
+                my $color = $opts{no_color} ? 'never' : 'always';
+                system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//' | diff --ignore-all-space --color=$color --palette='de=90:ad=33' -U0 <(docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//' ) - | tail -n +4));
+            } 
         } else {
             log_("$c{GRAY}=> $image is up-to-date$c{NC}");
         }
@@ -767,7 +770,7 @@ chdir '/opt/dockers' or die;
 
 while (1) {
     @ARGV or last;
-    if (my ($opt) = grep { $ARGV[0] eq $_ } "--only-run", "--only-runOnce", "--logsf", "--quiet", "--verbose", "--if-old", "--check-image-old") {
+    if (my ($opt) = grep { $ARGV[0] eq $_ } "--only-run", "--only-runOnce", "--logsf", "--quiet", "--verbose", "--if-old", "--check-image-old", "--no-color") {
         shift;
         $opt =~ s/^--//;
         $opt =~ s/-/_/g;
@@ -775,6 +778,9 @@ while (1) {
     } else {
         last;
     }
+}
+if ($opts{no_color}) {
+    $c{$_} = '' foreach keys %c;
 }
 
 my @apps;
