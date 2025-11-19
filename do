@@ -248,7 +248,7 @@ sub check_updates_using_package_manager {
         if (my $updates = `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --entrypoint=sh $image`) {
             print "Found package manager updates for $image (used by $apps)\n";
             write_file($e->{cache_buster_file}, $updates);
-            log_("${YELLOW}$updates$NC");
+            print "${YELLOW}$updates$NC" if !$opts{quiet};
         }
     }
 
@@ -312,7 +312,7 @@ sub check_image_updates {
             # or
             # -ENV TOMCAT_VERSION=10.1.47
             # +ENV TOMCAT_VERSION=10.1.48
-            $opts{verbose} and system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//' | diff --ignore-all-space --color=always --palette='de=90:ad=33' -U0 <(docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//' ) - | tail -n +4));
+            $opts{quiet} or system('bash', '-c', qq(/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//' | diff --ignore-all-space --color=always --palette='de=90:ad=33' -U0 <(docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//' ) - | tail -n +4));
         } else {
             log_("${GRAY}=> $image is up-to-date${NC}");
         }
@@ -729,7 +729,7 @@ usage:
     $0 { runOnce | build-runOnce | runOnce-run } [--quiet] <app> [--cd <dir|subdir>] <args...>
     $0 purge
     $0 images
-    $0 check-updates [--verbose] { --all | <app> ... }
+    $0 check-updates [--quiet] [--verbose] { --all | <app> ... }
     $0 ps [--quiet] [--check-image-old] [<app> ... ]
     $0 rights [--quiet] { --all | <app> ... }
     $0 stop-rm [--quiet] { --all | <app> ... }
