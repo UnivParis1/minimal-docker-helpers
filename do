@@ -554,6 +554,7 @@ sub pull {
 sub run {
     my ($appv) = @_;
     log_(qq(Running "VERBOSE=1 ./$appv->{run_file} $appv->{name}" :));
+    $ENV{VERBOSE} = $opts{verbose};
     sys("./$appv->{run_file}", $appv->{name});
 }
 
