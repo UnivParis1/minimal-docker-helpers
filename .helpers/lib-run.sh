@@ -190,10 +190,14 @@ docker_run_common() {
     exit 1
   fi
 
-  ro_vols="$ro_vols /etc/timezone"
+  if [ -e /etc/timezone ]; then    
+    # /etc/timezone is legacy on Debian, cf https://wiki.debian.org/TimeZoneChanges
+    # quelles applications utilisent /etc/timezone plutôt que env TZ ?
+    ro_vols="$ro_vols /etc/timezone"
+  fi
   # nécessaire pour nodejs qui sinon utilise le lien /etc/localtime qu'il est impossible de modifier par mount-bind
   # utilisé aussi pour PHP via la conf "date.timezone = ${TZ}"
-  opts="$opts --env TZ=`cat /etc/timezone`"
+  opts="$opts --env TZ=`timedatectl show --value --property=Timezone`"
 
   # utile pour nodejs
   opts="$opts --env LANG=fr_FR.UTF-8"
