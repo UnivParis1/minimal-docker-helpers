@@ -321,9 +321,13 @@ sub check_image_updates {
             # -ENV TOMCAT_VERSION=10.1.47
             # +ENV TOMCAT_VERSION=10.1.48
             if (!$opts{quiet}) {
+                # to have a shorter diff, ignore RUN lines (hopefully package have a VAR or ADD). tested on maven:3-eclipse-temurin-17-alpine
+                sub simplify {
+                    grep { !/^RUN / } @_
+                }
                 require File::Temp;
-                my $old = write_tempfile(`docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//'`);
-                my $new = write_tempfile(`/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//'`);
+                my $old = write_tempfile(simplify(`docker history --no-trunc --format '{{.CreatedBy}}' $image | sed 's/#.*//'`));
+                my $new = write_tempfile(simplify(`/opt/dockers/.helpers/get-image-info-from-docker.io-registry config $repo $tag | jq -r '.history[] | .created_by' | tac | sed 's/#.*//'`));
                 
                 my $color = $opts{no_color} ? 'never' : 'always';
                 my $diff = `diff --ignore-all-space --color=$color --palette='de=90:ad=33' -U0 $old $new | tail -n +4`;
