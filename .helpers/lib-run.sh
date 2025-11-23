@@ -225,7 +225,7 @@ docker_run_common() {
   fi
 
   if [ "$use_http_proxy_via" = "env" ]; then
-    opts="$opts --env http_proxy=http://proxy.univ-paris1.fr:3128 --env https_proxy=http://proxy.univ-paris1.fr:3128 --env no_proxy=localhost,127.0.0.1,univ-paris1.fr,pantheonsorbonne.fr,bis-sorbonne.fr"
+    opts="$opts --env-file /opt/dockers/.helpers/various/proxy.univ-paris1.fr.env"
   fi
   if [ "$use_http_proxy_for" = "maven" ]; then
     ro_vols="$ro_vols /opt/dockers/.helpers/various/maven-proxy.univ-paris1.fr-settings.xml:/usr/share/maven/conf/settings.xml"
