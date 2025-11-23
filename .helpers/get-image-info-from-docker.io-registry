@@ -3,6 +3,9 @@
 action=$1
 repo=$2
 tag=$3
+
+export $(xargs < /opt/dockers/.helpers/various/proxy.univ-paris1.fr.env)
+
 token=$(curl -sS "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$repo:pull"  | perl -lne 'print $1 if /"token":"([^"]*)/')
 if [ -z "$token" ]; then
    echo "error accessing auth.docker.io" >&2
