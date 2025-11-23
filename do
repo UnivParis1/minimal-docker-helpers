@@ -253,7 +253,7 @@ sub check_updates_using_package_manager {
         my $e = $images{$image};
         my $apps = join(",", @{$e->{apps}});
         log_("$c{GRAY}Checking updates using package manager in image $image (used by $apps) $c{NC}");
-        if (my $updates = `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --entrypoint=sh $image`) {
+        if (my $updates = `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --env-file /opt/dockers/.helpers/various/proxy.univ-paris1.fr.env --entrypoint=sh $image`) {
             print "Found package manager updates for $image (used by $apps)\n";
             write_file($e->{cache_buster_file}, $updates);
             print "$c{YELLOW}$updates$c{NC}\n" if !$opts{quiet};
@@ -337,7 +337,7 @@ sub check_image_updates {
                     print "$diff\n";
                 } elsif (my $updates = 
                     # build command did not change, it must be a package change:
-                    `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --entrypoint=sh $image`) {
+                    `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --env-file /opt/dockers/.helpers/various/proxy.univ-paris1.fr.env --entrypoint=sh $image`) {
                     print "$c{YELLOW}$updates$c{NC}\n";
                 }
             } 
