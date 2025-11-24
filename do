@@ -753,7 +753,7 @@ usage:
     $0 { runOnce | build-runOnce | runOnce-run } [--quiet] <app> [--cd <dir|subdir>] <args...>
     $0 purge
     $0 images
-    $0 check-updates [--quiet] [--verbose] { --all | <app> ... }
+    $0 check-updates [--quiet] [--verbose] [--random-delay=<min>m] { --all | <app> ... }
     $0 ps [--quiet] [--check-image-old] [<app> ... ]
     $0 rights [--quiet] { --all | <app> ... }
     $0 stop-rm [--quiet] { --all | <app> ... }
@@ -789,11 +789,16 @@ chdir '/opt/dockers' or die;
 
 while (1) {
     @ARGV or last;
-    if (my ($opt) = grep { $ARGV[0] eq $_ } "--only-run", "--only-runOnce", "--logsf", "--quiet", "--verbose", "--if-old", "--check-image-old", "--no-color") {
+    my ($opt, $value);
+    if (($opt) = grep { $ARGV[0] eq $_ } "--only-run", "--only-runOnce", "--logsf", "--quiet", "--verbose", "--if-old", "--check-image-old", "--no-color") {
         shift;
         $opt =~ s/^--//;
         $opt =~ s/-/_/g;
         $opts{$opt} = 1;
+    } elsif (($opt, $value) = $ARGV[0] =~ /^--(random-delay)=(\S+)$/) {
+        shift;
+        $opt =~ s/-/_/g;
+        $opts{$opt} = $value;
     } else {
         last;
     }
@@ -836,6 +841,11 @@ apply_rights($_) foreach @apps;
 
 my @appsv = map { compute_app_vars($_) } @apps;
 
+if ($opts{random_delay}) {
+    my $delay = $opts{random_delay};
+    $delay = $1 * 60 if $delay =~ /(\d+)m$/;
+    sleep(rand($delay));
+}
 if ($want_purge) {
     $opts{verbose} = 1;
     purge([@appsv]);
