@@ -3,6 +3,7 @@
 # variables gérés :
 # - $container_name
 # - $0
+# - $default_subdir
 # - $base_dir_template
 # variables ajoutées :
 # - $action : "run" ou "runOnce"
@@ -14,7 +15,7 @@
 # - $logdir : répertoire conseillé pour mettre les logs
 # variables parfois ajoutées si vides :
 # - $image : si Dockerfile présent, nom de l'image construite pour le Dockerfile
-# - $subdir : calculé à partir du $container_name "<user>--<subdir>"
+# - $subdir : calculé à partir du $container_name "<user>--<subdir>", avec par défaut $default_subdir
 # - $base_dir : calculé à partir de $base_dir_$template
 # variables parfois complétés
 # - $rw_vols : si configuré via "rw_vol=" dans run.env
@@ -65,6 +66,8 @@ _compute_default_vars_and_read_env() {
         local subdir_=${container_name#*--}
         if [ $subdir_ != $container_name ]; then
             subdir=$subdir_
+        elif [ -n "$default_subdir" ]; then
+            subdir=$default_subdir
         fi
     fi
     if [ -z "$user_home" ]; then
