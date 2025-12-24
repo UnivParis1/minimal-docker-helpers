@@ -3,7 +3,8 @@
 #set -x
 set -o errexit
 
-base_dir_template='$user_home/www'
+default_subdir=www
+base_dir_template='$user_home/$subdir'
 
 . .helpers/lib-run--set-vars.sh
 
@@ -35,9 +36,13 @@ ro_vols="$ro_vols /var/run/mysqld"
 # pour permettre syslog dans le conteneur ( https://github.com/prigaux/notes/blob/main/FPM-et-messages-de-logs-de-PHP.md )
 ro_vols="$ro_vols /run/systemd/journal/dev-log:/dev/log"
 
+run_suffix=""
+if [ $subdir != $default_subdir ]; then
+   run_suffix="--$subdir"
+fi
 
-    run_dir=$user_home/.run
-old_run_dir=$user_home/.old-run
+    run_dir=$user_home/.run$run_suffix
+old_run_dir=$user_home/.old-run$run_suffix
 
 _may_rename_kill_or_rm QUIT
 if [ "$rc" = killed ]; then 
