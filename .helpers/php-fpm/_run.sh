@@ -36,18 +36,21 @@ ro_vols="$ro_vols /var/run/mysqld"
 ro_vols="$ro_vols /run/systemd/journal/dev-log:/dev/log"
 
 
+    run_dir=$user_home/.run
+old_run_dir=$user_home/.old-run
+
 _may_rename_kill_or_rm QUIT
 if [ "$rc" = killed ]; then 
     # grâce au mount-bind que fait docker, on peut faire que
-    # - dans le conteneur qui s'arrête, /run/php/fpm.sock est $user_home/.old-run/fpm.sock
-    # - dans le conteneur qui démarre,  /run/php/fpm.sock est $user_home/.run/fpm.sock
-    rm -rf $user_home/.old-run
-    mv $user_home/.run $user_home/.old-run
+    # - dans le conteneur qui s'arrête, /run/php/fpm.sock est $old_run_dir/fpm.sock
+    # - dans le conteneur qui démarre,  /run/php/fpm.sock est $run_dir/fpm.sock
+    rm -rf $old_run_dir
+    mv $run_dir $old_run_dir
     # le répertoire pour le conteneur qui démarre est créé ci-dessous :
 fi
 # (droits restreints pour que les utilisateurs sur l'hôte ne puissent pas voir les sessions/sockets des autres)
-install -d -o $user -g $user -m 770 $user_home/.run /var/lib/php/sessions-$user
-rw_vols="$rw_vols $user_home/.run:/run/php /var/lib/php/sessions-$user:/var/lib/php/sessions"
+install -d -o $user -g $user -m 770 $run_dir /var/lib/php/sessions-$user
+rw_vols="$rw_vols $run_dir:/run/php /var/lib/php/sessions-$user:/var/lib/php/sessions"
 
 
 _docker_run --define syslog.ident=$container_name:docker-fpm
