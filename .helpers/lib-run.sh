@@ -300,9 +300,10 @@ _docker_runOnce() {
   fi
 
   if [ -t 0 ]; then
-    opts="--interactive --tty $opts"
+    opts="--tty $opts"
   fi
-  opts="--rm $opts"
+  # --interactive to allow piping stdin to runOnce
+  opts="--interactive --rm $opts"
 
   compute_docker_run_opts
 
