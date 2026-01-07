@@ -300,7 +300,7 @@ _docker_runOnce() {
   fi
 
   if [ -t 0 ]; then
-    opts="--interactive --tty --rm $opts"
+    opts="--interactive --tty $opts"
   fi
   opts="--rm $opts"
 
