@@ -141,6 +141,12 @@ sub compute_app_vars {
 
     $v{image} = may_get_image("$app/run.env");
     $v{image_runOnce} = may_get_image("$app/runOnce.env");
+    if ($v{image}) {
+        $v{image_up1} = FROM_to_name($v{image});
+    }
+    if ($v{image_runOnce}) {
+        $v{image_runOnce_up1} = FROM_to_name($v{image_runOnce});
+    }
 
     if (-e "$app/Dockerfile") {
         $v{FROM} = get_FROM("$app/Dockerfile");
@@ -157,12 +163,16 @@ sub compute_app_vars {
         $v{run_file} = "$app/run.sh";
     } elsif ($v{FROM_up1}) {
         $v{run_file} = "$v{FROM_up1}/default-run.sh";
-        -e $v{run_file} or die("no $app/run.sh and no $v{FROM_up1}/default-run.sh\n");
-    } elsif (-e "$app/run.env" && $v{image}) {
-        $v{run_file} = FROM_to_name($v{image}) . "/default-run.sh";
         -e $v{run_file} or die("no $app/run.sh and no $v{run_file}\n");
+    } elsif ($v{image_up1}) {
+        $v{run_file} = "$v{image_up1}/default-run.sh";
+        -e $v{run_file} or die("no $app/run.sh and no $v{run_file}\n");
+    } elsif ($v{FROM}) {
+        die("no $app/run.sh and no default-run.sh from parent image (Dockerfile FROM)\n");
+    } elsif ($v{image}) {
+        die("no $app/run.sh and no default-run.sh from parent image (image=xxx in run.env)\n");
     } elsif (-e "$app/run.env") {
-        -e $v{run_file} or die("no $app/run.sh and no Dockerfile and no image= in $app/run.env\n");
+        die("no $app/run.sh\n");
     }
 
     $v{runOnce_file} =
