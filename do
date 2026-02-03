@@ -472,7 +472,7 @@ sub cache_buster_dir {
     "$app/$cache_buster_dir"
 }
 
-# on cherche le plus proche parent ayant "COPY .Dockerfile.cache-buster /root/" (normalement un seul parent à cet instruction)
+# on cherche le plus proche parent ayant "COPY .Dockerfile.cache-buster /root/" (normalement un seul parent a cet instruction)
 sub cache_buster_dir_rec {
     my ($app2appsv, $appv, $isRunOnce) = @_;
 
