@@ -175,9 +175,19 @@ sub compute_app_vars {
         die("no $app/run.sh\n");
     }
 
-    $v{runOnce_file} =
-        -e "$app/runOnce.sh" ? "$app/runOnce.sh" :
-        -e "$app/runOnce.env" ? ".helpers/_runOnce.sh" : undef;
+    if ( -e "$app/default-runOnce.sh" ) {
+        $v{runOnce_file} = "";
+    } elsif (-e "$app/runOnce.sh") {
+        $v{runOnce_file} = "$app/runOnce.sh";
+    } elsif ($v{FROM_runOnce_up1}) {
+        $v{runOnce_file} = "$v{FROM_runOnce_up1}/default-runOnce.sh";
+        $v{runOnce_file} = ".helpers/_runOnce.sh" if ! -e $v{runOnce_file};
+    } elsif ($v{image_runOnce_up1}) {
+        $v{runOnce_file} = "$v{image_runOnce_up1}/default-runOnce.sh";
+        $v{runOnce_file} = ".helpers/_runOnce.sh" if ! -e $v{runOnce_file};
+    } elsif (-e "$app/runOnce.env") {
+        $v{runOnce_file} = ".helpers/_runOnce.sh";
+    }
 
     \%v
 }
