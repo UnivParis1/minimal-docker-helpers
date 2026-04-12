@@ -505,7 +505,7 @@ sub build {
     my $opts = $isRunOnce ? "-f $app/runOnce.dockerfile" : '';
     my $cmd = "docker build $opts -t $image $app/";
     log_($cmd);
-    open(my $F, "$cmd |");
+    open(my $F, "$cmd 2>&1 |");
     my @may_show = "$c{YELLOW}Building image $image$c{NC}\n";
     my $out;
     my $status = 'from_cache';
@@ -521,6 +521,7 @@ sub build {
     }
     close($F) or do {
         print $out;
+        print STDERR "$c{RED}Building image $image FAILED$c{NC}\n";
         exit 1;
     };
     print "\n" if $status eq 'built';
