@@ -30,6 +30,8 @@ ADD https://security.debian.org/debian-security/dists/trixie-security/InRelease 
 ```
 * * But it will force a rebuild even if you do not use any of the updated packages
 
+Those solutions are not efficient/GreenIT. Below is a solution implemented in /opt/dockers/do:
+
 ## check-updates
 
 By default `/opt/dockers/do check-updates` only checks if there is a more recent image
