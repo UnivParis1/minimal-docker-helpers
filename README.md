@@ -1,12 +1,27 @@
-# Dockerisation légère
+# wrapper dockers/do (notamment pour la conteneurisation Environnement seulement)
 
-https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-docker.md
+ Avantages du wrapper dockers/do :
+
+* bien adapté pour des conteneurs Tomcat/FPM/Node.js avec application fournie en mount bind
+* gère la délégation à l'utilisateur applicatif via de nombreuses commandes via sudo
+* permet notamment le suivi des mises à jour des images “rolling release” (Debian, Tomcat, Java, Node…)
+* [zero downtime](https://github.com/UnivParis1/tomcat-early-close-http-connector?tab=readme-ov-file#readme) (avec _may_rename_kill_or_rm)
+
+Voir aussi la doc : https://github.com/prigaux/notes/blob/main/migrate-debian-php-fpm-to-minimal-docker.md
 
 ## Mise à jour des images et conteneurs
 
 ```
 /opt/dockers/do upgrade
 ```
+
+Cette commande effectue 
+* les mises à jour des images “rolling release”
+* les mises à jour OS détectées par `/opts/dockers/do/check-updates --all`
+
+Pour la production, il est conseillé d'installer ce [cron](.helpers/various/check-updates-cron) (using `ln -s`) qui lance `check-updates` pour surveiller les mises à jour possibles (OS et images).
+
+[Voir les détails](.helpers/various/check-updates--upgrade.md).
 
 ## Détail des variables
 
