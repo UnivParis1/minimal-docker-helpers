@@ -17,7 +17,7 @@ Voir aussi la doc : https://github.com/prigaux/notes/blob/main/migrate-debian-ph
 
 Cette commande effectue 
 * les mises à jour des images “rolling release”
-* les mises à jour OS détectées par `/opts/dockers/do/check-updates --all`
+* les mises à jour OS détectées par `/opt/dockers/do/check-updates --all`
 
 Pour la production, il est conseillé d'installer ce [cron](.helpers/various/check-updates-cron) (using `ln -s`) qui lance `check-updates` pour surveiller les mises à jour possibles (OS et images).
 
@@ -56,7 +56,7 @@ Pour la production, il est conseillé d'installer ce [cron](.helpers/various/che
     * `ro_vols=/webhome/foo` : monte /webhome/foo de l'hôte dans /webhome/foo dans le conteneur
     * `ro_vols=/webhome/foo:/usr/local` : monte /webhome/foo de l'hôte dans /usr/local dans le conteneur
   * `$rw_vols` : répertoires montés en lecture/écriture (avec ou sans `:` comme `$ro_vols`)
-  * `$container_name` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un répertoire /opts/dockers/xxx
+  * `$container_name` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un répertoire /opt/dockers/xxx
   * `$user` : utilisé pour calculer d'autres variables. Par défaut `xxx` pour un $container_name `xxx--subdir` ou `xxx`
   * `$logdir` : par défaut `/var/log/$container_name`
   * `$run_user` : utilisateur de l'hôte qui fait tourner le conteneur. Par défaut `$user`

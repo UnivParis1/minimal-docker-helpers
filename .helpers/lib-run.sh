@@ -8,7 +8,7 @@
 # variables ajoutées :
 # - $action : "run" ou "runOnce"
 # variables ajoutées si vides :
-# - $app_build_dir : répertoire /otp/dockers/xxx/
+# - $app_build_dir : répertoire /opt/dockers/xxx/
 # - $container_name : noms du conteneur docker
 # - $user : utilisateurs applicatifs possédant les fichiers. calculé à partir du $container_name "<user>--<subdir>"
 # - $user_home : répertoire de l'utilisateur $user
