@@ -205,6 +205,10 @@ docker_run_common() {
   # utile pour nodejs
   opts="$opts --env LANG=fr_FR.UTF-8"
 
+  # ne pas autoriser un utilisateur non-root à devenir root (notamment via le droit "set-user-ID", ex "su")
+  # (si le $run_user est root, cela autorise à devenir non-root)
+  opts="$opts --security-opt=no-new-privileges"
+
   if [ -z "$run_user" ]; then
     run_user=$user
   fi
