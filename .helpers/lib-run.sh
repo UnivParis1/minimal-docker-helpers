@@ -303,11 +303,19 @@ _docker_runOnce() {
     ro_vols="$ro_vols /etc/passwd /etc/group"
   fi
 
-  if [ -t 0 ]; then
-    opts="--tty $opts"
+  # NB : ne pas mettre --interactive si « stdin is a tty » et « stdout is not a tty », sinon pb "stair case output" https://github.com/python/cpython/issues/139412 https://github.com/sudo-project/sudo/issues/258
+  if [ ! -t 0 ]; then
+    # stdin is not a tty
+    # => on a besoin de --interactive pour que le stdin soit envoyé au process
+    # => on ne peut mettre --tty car ce n'est pas un tty
+    opts="--interactive $opts"
+  elif [ -t 1 ]; then
+    # stdin & stdout are ttys
+    # => interactive shell, on met les deux :
+    opts="--interactive --tty $opts"
   fi
-  # --interactive to allow piping stdin to runOnce
-  opts="--interactive --rm $opts"
+
+  opts="--rm $opts"
 
   compute_docker_run_opts
 
