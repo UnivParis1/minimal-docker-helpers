@@ -13,6 +13,11 @@ if [ -z "$token" ]; then
 fi
 if [ $action = digest ]; then
     curl -sS -i --head https://registry-1.docker.io/v2/$repo/manifests/$tag -H "Authorization: Bearer $token" | sed -n 's/^docker-content-digest: //p'
+elif [ $action = versions ]; then
+    digest1=$3
+    digest2=$4
+    curl -sL -H "Authorization: Bearer $token" https://registry-1.docker.io/v2/$repo/blobs/$digest1 | jq -r '.manifests[0].annotations["org.opencontainers.image.version"]'
+    curl -sL -H "Authorization: Bearer $token" https://registry-1.docker.io/v2/$repo/blobs/$digest2 | jq -r '.manifests[0].annotations["org.opencontainers.image.version"]'
 else
     digest=$(curl -sS  https://registry-1.docker.io/v2/$repo/manifests/$tag -H "Authorization: Bearer $token"  | jq -r '.manifests[0].digest')
     config_digest=$(curl -sL -H "Authorization: Bearer $token"      https://registry-1.docker.io/v2/$repo/blobs/$digest | jq -r .config.digest)

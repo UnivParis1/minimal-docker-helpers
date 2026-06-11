@@ -326,11 +326,11 @@ sub check_image_updates {
         
         my ($repo, $tag) = split(":", $image);
         $repo = "library/$repo" if $repo !~ m!/!;
-        my ($new) = `/opt/dockers/.helpers/get-image-info-from-docker.io-registry digest $repo $tag` =~ /(\S+)/;
+        my ($new_digest) = `/opt/dockers/.helpers/get-image-info-from-docker.io-registry digest $repo $tag` =~ /(\S+)/;
 
-        if (!$new) {
+        if (!$new_digest) {
             print "$c{RED}ERROR getting latest image $image$c{NC}\n";
-        } elsif ($new ne $current) {
+        } elsif ($new_digest ne $current) {
             print "Found docker image update for $image (used by $apps)\n";
 
             # Display a diff of Dockerfile commands (from "docker history")
@@ -341,6 +341,9 @@ sub check_image_updates {
             # -ENV TOMCAT_VERSION=10.1.47
             # +ENV TOMCAT_VERSION=10.1.48
             if (!$opts{quiet}) {
+                my ($old_version, $new_version) = `/opt/dockers/.helpers/get-image-info-from-docker.io-registry versions $repo $current $new_digest`;
+                my $diff_version = "-image.version: $old_version" . "+image.version: $new_version" if $old_version ne $new_version;
+            
                 # to have a shorter diff, ignore RUN lines (hopefully package have a VAR or ADD). tested on maven:3-eclipse-temurin-17-alpine
                 sub simplify {
                     grep { !/^RUN / } @_
@@ -353,8 +356,9 @@ sub check_image_updates {
                 my $diff = `diff --ignore-all-space --color=$color --palette='de=90:ad=33' -U0 $old $new | tail -n +4`;
                 unlink $old;
                 unlink $new;
-                if ($diff) {
-                    print "$diff\n";
+                if ($diff_version || $diff) {
+                    print $diff_version if $diff_version;
+                    print "$diff\n" if $diff;
                 } elsif (my $updates = 
                     # build command did not change, it must be a package change:
                     `cat /opt/dockers/.helpers/various/image-check-updates-using-package-manager.sh | docker run --rm -i --env-file /opt/dockers/.helpers/various/proxy.univ-paris1.fr.env --entrypoint=sh $image`) {
