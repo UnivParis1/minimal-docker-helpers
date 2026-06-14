@@ -1,0 +1,4 @@
+MAILTO="pascal.rigaux@univ-paris1.fr"
+
+# every day, beetween 3h and 3h10
+00 3 * * * root sh -c '/opt/dockers/do check-updates --no-color --random-delay=10m --all && /opt/dockers/do upgrade --no-color' 2>&1 | logger -t opt_dockers_do__check-updates-and-upgrade

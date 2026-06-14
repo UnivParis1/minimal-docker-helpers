@@ -374,8 +374,9 @@ sub check_image_updates {
 sub check_updates_many {
     my ($appsv) = @_;
 
-    if ($opts{verbose} && ! -e "/etc/cron.d/opt_dockers_do__check-updates") {
+    if ($opts{verbose} && ! -e "/etc/cron.d/opt_dockers_do__check-updates" && ! -e "/etc/cron.d/opt_dockers_do__check-updates-and-upgrade") {
         print STDERR "$c{GRAY}Pour installer le cron check-updates, lancer : ln -s /opt/dockers/.helpers/various/check-updates-cron /etc/cron.d/opt_dockers_do__check-updates$c{NC}\n";
+        print STDERR "$c{GRAY}Pour installer le cron check-updates-and-upgrade, lancer : ln -s /opt/dockers/.helpers/various/check-updates-and-upgrade-cron /etc/cron.d/opt_dockers_do__check-updates-and-upgrade$c{NC}\n";
     }
 
     my %app2appsv = map { $_->{name} => $_ } @{all_appsv()};
