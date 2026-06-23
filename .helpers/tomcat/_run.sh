@@ -41,7 +41,11 @@ done
 
 # utilisé dans server.xml
 for jar in early-close-http-connector-1.0.0-SNAPSHOT.jar; do
-  ro_vols="$ro_vols $assets/$jar:/usr/local/tomcat/lib/$jar"
+  if echo $image | grep -q 'tomcat:1[1-9]-'; then
+      ro_vols="$ro_vols $assets/tomcat11/$jar:/usr/local/tomcat/lib/$jar"
+  else
+      ro_vols="$ro_vols $assets/$jar:/usr/local/tomcat/lib/$jar"
+  fi
 done
 
 # si on a un mot de passe, on active le tomcat manager. Hors sans reconstruire l'image, la seule façon de l'activer est d'utiliser un fichier de context.xml
