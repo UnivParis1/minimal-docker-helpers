@@ -275,6 +275,7 @@ _docker_run() {
   may_configure_rsyslog_and_logrotate
   opts="--log-driver syslog --log-opt tag={{.Name}}:docker:{{.ID}}: $opts"
 
+  # NB: not using restart "unless-stopped" which fails to always start on reboot
   opts="--detach --restart always $opts"
 
   compute_docker_run_opts
