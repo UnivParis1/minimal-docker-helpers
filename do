@@ -321,8 +321,9 @@ sub check_image_updates {
         }
         my $apps = join(",", @{$images{$image}});
         log_("$c{GRAY}Checking docker.io registry for $image update (used by $apps)$c{NC}");
-        
-        my ($current) = `docker inspect --format '{{index .RepoDigests 0}}' $image` =~ /@(.*)/;
+
+        # there can be multiple equivalent digests (when the same image was re-tagged and pushed) (?)
+        my (@current) = `docker inspect --format '{{join .RepoDigests " "}}' $image` =~ /@(\S+)/g;
         
         my ($repo, $tag) = split(":", $image);
         $repo = "library/$repo" if $repo !~ m!/!;
@@ -330,7 +331,7 @@ sub check_image_updates {
 
         if (!$new_digest) {
             print "$c{RED}ERROR getting latest image $image$c{NC}\n";
-        } elsif ($new_digest ne $current) {
+        } elsif (!grep { $new_digest eq $_ } @current) {
             print "Found docker image update for $image (used by $apps)\n";
 
             # Display a diff of Dockerfile commands (from "docker history")
@@ -341,7 +342,7 @@ sub check_image_updates {
             # -ENV TOMCAT_VERSION=10.1.47
             # +ENV TOMCAT_VERSION=10.1.48
             if (!$opts{quiet}) {
-                my ($old_version, $new_version) = `/opt/dockers/.helpers/get-image-info-from-docker.io-registry versions $repo $current $new_digest`;
+                my ($old_version, $new_version) = `/opt/dockers/.helpers/get-image-info-from-docker.io-registry versions $repo $current[0] $new_digest`;
                 my $diff_version = "-image.version: $old_version" . "+image.version: $new_version" if $old_version ne $new_version;
             
                 # to have a shorter diff, ignore RUN lines (hopefully package have a VAR or ADD). tested on maven:3-eclipse-temurin-17-alpine
