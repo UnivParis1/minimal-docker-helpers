@@ -203,7 +203,10 @@ docker_run_common() {
   opts="$opts --env TZ=`timedatectl show --value --property=Timezone`"
 
   # utile pour nodejs
-  opts="$opts --env LANG=fr_FR.UTF-8"
+  if [ -z "$run_LANG" ]; then
+    run_LANG=fr_FR.UTF-8
+  fi
+  opts="$opts --env LANG=$run_LANG"
 
   # ne pas autoriser un utilisateur non-root à devenir root (notamment via le droit "set-user-ID", ex "su")
   # (si le $run_user est root, cela autorise à devenir non-root)
