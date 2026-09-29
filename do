@@ -516,13 +516,42 @@ sub build {
     my @may_show = "$c{YELLOW}Building image $image$c{NC}\n";
     my $out;
     my $status = 'from_cache';
+    my $is_BuildKit;
+    my $bloc_status = 'ignore';
     while (<$F>) {
-        push @may_show, $_ if /^Step/;
-        if (/^\Q ---> Running in /) {
+        if (/\Q#1 [internal] load build definition from Dockerfile/) {
+            $is_BuildKit = 1;
+        }
+        if ($is_BuildKit) {
+            if (/^$/) {
+                $bloc_status = 'new';
+            } else {
+                if ($bloc_status eq 'new') {
+                    if (m!^#\d+ (\[\d+/\d+] .*)!) {
+                        $bloc_status = $1;
+                    } else {
+                        $bloc_status = 'ignore';
+                    }
+                } elsif (/^#\d+ (CACHED|transferring )/ || / DONE (.*?)s$/ && $1 == 0) {
+                    # ignore
+                } elsif ($bloc_status ne 'ignore') {
+                    print "$bloc_status\n";
+                    $bloc_status = 'ignore';
+                }
+            }
+            if (/ writing image (sha256:\S+)/) {
+                if ($prev_id ne $1) {
+                    $status = 'built';
+                }
+            }
+        } else {
+          push @may_show, $_ if /^Step/;
+          if (/^\Q ---> Running in /) {
             $status = 'built';
             # afficher une information de progression, mais pas tout, et uniquement si pas de cache
             print foreach @may_show;
             @may_show = ();
+          }
         }
         $out .= $_;
     }
