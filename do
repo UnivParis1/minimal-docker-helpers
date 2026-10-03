@@ -135,6 +135,11 @@ sub old_or_missing_images {
     } @$appsv
 }
 
+sub app_to_user {
+    my ($app) = @_;
+    $app =~ /(.*)--/ && $1 || $app
+}
+
 sub compute_app_vars {
     my ($app) = @_;
     my %v = (name => $app);
@@ -213,7 +218,7 @@ sub apply_rights {
     } elsif (-e "$app/run.sh" && read_file("$app/run.sh") =~ /^\s*user=root\s*$/m) {
         # l'utilisateur n'existe pas => pas de chgrp du répertoire, mais le chmod 750 est suffisant
     } elsif (grep { -e "$app/$_" } @user_files) {
-        my $user = $app =~ /(.*)--/ && $1 || $app;
+        my $user = app_to_user($app);
         my $uid = getpwnam($user) or die "app $app requires user $user\n";
         my $gid = getgrnam($user);
         chown(0, $gid, $app) or die "chgrp $app failed";
@@ -509,7 +514,8 @@ sub build {
         }
     }
 
-    my $opts = $isRunOnce ? "-f $app/runOnce.dockerfile" : '';
+    my $opts = '--build-arg HOST_USER_UID=' . getpwnam(app_to_user($app));
+    $opts .= " -f $app/runOnce.dockerfile" if $isRunOnce;
     my $cmd = "docker build $opts -t $image $app/";
     log_($cmd);
     open(my $F, "$cmd 2>&1 |");
