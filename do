@@ -516,6 +516,10 @@ sub build {
 
     my $opts = '--build-arg HOST_USER_UID=' . getpwnam(app_to_user($app));
     $opts .= " -f $app/runOnce.dockerfile" if $isRunOnce;
+    if (my $absolute_Dockerfile = readlink("$app/Dockerfile")) {
+        $opts .= " -f $app/$absolute_Dockerfile";
+    }
+    
     my $cmd = "docker build $opts -t $image $app/";
     log_($cmd);
     open(my $F, "$cmd 2>&1 |");
