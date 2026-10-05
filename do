@@ -529,7 +529,7 @@ sub build {
     my $is_BuildKit;
     my $bloc_status = 'ignore';
     while (<$F>) {
-        if (/\Q#1 [internal] load build definition from Dockerfile/) {
+        if (/\Q#1 [internal] load build definition from /) {
             $is_BuildKit = 1;
         }
         if ($is_BuildKit) {
