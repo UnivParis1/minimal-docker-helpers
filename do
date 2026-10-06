@@ -801,6 +801,7 @@ sub images {
         }
     }
 
+    # add remaining (missing) images:
     $images{$_} = { name => $_, missing => 1, %{$expected_images{$_}} } foreach keys %expected_images;
 
     my $format = "%-45s %30s %10s   %-40s %-40s %s\n";
