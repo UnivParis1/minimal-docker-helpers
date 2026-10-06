@@ -1,19 +1,23 @@
 #!/usr/bin/perl -w
 use strict;
 
-my %id2names;
-my @names;
-foreach (`docker images --no-trunc --format '{{.ID}} {{.Repository}}:{{.Tag}}'`) {
-    s/:latest$//; # on simplifie le nom
-    my ($id, $name) = split;
-    push @{$id2names{$id}}, $name;
-    push @names, $name;
+my @ids = `docker images --no-trunc --format '{{.ID}}'` =~ /(\S+)/g;
+my @images = map {
+    my ($names, $ids) = /\[(.*?)\] \[(.*?)\]/ or die "weird <$_>";
+    map {
+        s/:latest$//; # on simplifie le nom
+        { name => $_, ids => "$ids " }
+    } split(" ", $names)
+} `docker inspect --format='{{.RepoTags}} {{.RootFS.Layers}}' @ids | uniq`;
+
+foreach my $image (sort { $a->{name} cmp $b->{name} } @images) {   
+    my $name = $image->{name};
+    if ($name =~ /^up1-/) {
+        my @parents = grep { $image != $_ && starts_with($image->{ids}, $_->{ids}) && $image->{ids} ne $_->{ids} } @images;
+        printf "%-30s %s\n", $name, join(' ', map { $_->{name} } @parents);
+    }
 }
 
-foreach my $name (sort @names) {
-    if ($name =~ /^up1-/) {
-        my @ids = split " ", `docker history --no-trunc --quiet $name`;
-        my @parents = grep { $_ && $_ ne $name } map { @{$id2names{$_} || []} } @ids;
-        printf "%-30s %s\n", $name, join(' ', @parents);
-    }
+sub starts_with {
+    rindex($_[0], $_[1], 0) == 0
 }
