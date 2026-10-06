@@ -115,18 +115,21 @@ sub images_in_use {
     map { chomp; $_ } `docker container ls --no-trunc --format '{{.Image}}'`
 }
 
-sub old_or_missing_images {
-    my ($appsv, $isRunOnce) = @_;
-    my %name2parents = map {
+sub image2parents {
+    return map {
         my ($name, @parents) = split;
-        $name =~ s/^up1-// or die;
         ($name => \@parents)
     } `/opt/dockers/.helpers/docker-images-parents`;
+}
+    
+sub old_or_missing_images {
+    my ($appsv, $isRunOnce) = @_;
+    my %image2parents = image2parents();
 
     map {
         my $name = $_->{name};
         if (my $parent = $_->{$isRunOnce ? 'FROM_runOnce' : 'FROM'}) {
-            my $current_parents = $name2parents{$name};
+            my $current_parents = $image2parents{"up1-$name"};
             !$current_parents ? ($name => 'missing') :
                 $parent && !(List::Util::any { $_ eq $parent } @$current_parents) ? ($name => 'old') : ()
         } else {
@@ -738,6 +741,7 @@ sub images {
     my ($appsv) = @_;
 
     my $id_or_name_to_containers = image_to_containers();
+    my %image2parents = image2parents();
 
     my %expected_images;
     foreach (@$appsv) {
@@ -747,6 +751,7 @@ sub images {
     }
 
     my %images;
+    my %name2size;
     foreach (`docker image ls --no-trunc --format '{{.ID}}\t{{.CreatedSince}}\t{{.Size}}\t{{.Repository}}:{{.Tag}}'`) {
         chomp; 
         my ($id, $createdSince, $size, $name) = split "\t";
@@ -755,10 +760,11 @@ sub images {
         my $h = {
             id => $id,
             CreatedSince => $createdSince,
-            size => int(parse_size($size) / 1024/1024) . "MB",
+            size => parse_size($size),
             name => $name,
             names => [$name],
         };
+        $name2size{$name} = $h->{size};
 
 
         my $more_h = delete $expected_images{$name} || {};
@@ -781,22 +787,16 @@ sub images {
     foreach my $id (keys %images) {
         my $h = $images{$id};
         if ($h->{name} =~ /^up1-/) {
-            my @history = map { chomp; [split] } `docker history --no-trunc --format '{{.ID}} {{.Size}}' $id`;
-            my @ids = map { $_->[0] } @history;
-            my @parents = grep { $_ && $_->{name} ne $h->{name} } map { $images{$_} } @ids;
+            my @parents = @{$image2parents{$h->{name}} || []};
             my $parent = $parents[0];
             if (!$parent) {
                 $h->{parent} .= " $c{YELLOW}(old)$c{NC}";
             } else {
-                push @{$_->{children}}, $h->{name} foreach $parent;
-                $h->{parent} = $parent->{name};
+                push @{$_->{children}}, $h->{name} foreach grep { $_->{name} eq $parent } values %images;
+                $h->{parent} = $parent;
                 $h->{parent} =~ s/([:-]prev\d*)?$/$c{YELLOW} . ($1||'') . $c{NC}/e;
-                my $delta = 0;
-                foreach (@history) {
-                    last if $_->[0] eq $parent->{id};
-                    $delta += parse_size($_->[1]);
-                }
-                $h->{size} = "+" . int($delta / 1024/1024) . "MB";
+                my $delta = $h->{size} - $name2size{$parent};
+                $h->{formatted_size} = "+" . int($delta / 1024/1024) . "MB";
             }
         }
     }
@@ -811,7 +811,7 @@ sub images {
         printf $format, 
             $h->{name}, 
             $h->{missing} ? "$c{RED}missing$c{NC}" : $h->{CreatedSince} . $c{RED}.$c{NC}, 
-            $h->{size} || '', 
+            $h->{formatted_size} || $h->{size} && int($h->{size} / 1024/1024) . "MB" || '', 
             $h->{parent} || " $c{YELLOW}$c{NC}", 
             join(', ', @{$h->{containers_once} || []}) . ' ' .
               ($h->{containers} ? "$c{GREEN}" . join(', ', @{$h->{containers}}) . "$c{NC}" :
