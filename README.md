@@ -142,6 +142,20 @@ rw_vols="/var/cache/toto"
 /opt/dockers/do run --logsf toto
 ```
 
+## Exit on webapp startup issue
+
+Par défaut Tomcat ne termine pas quand une webapp ne démarre pas (état `FAILED`).
+
+Pour provoquer un exit, il faut ajouter dans context.xml
+
+```
+<Context>
+  <Listener className="fr.univparis1.tomcat.ExitOnContextFailureListener" />
+  ...
+```
+
+NB : cette classe est actuellement intégré dans early-close-http-connector-1.0.0-SNAPSHOT.jar qui ajouté automatiquement dans le classpath.
+
 ### FPM
 
 Conventions :
