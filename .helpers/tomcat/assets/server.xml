@@ -15,7 +15,8 @@
     -->
     <Connector protocol="fr.univparis1.tomcat.EarlyCloseHttp11NioProtocol"
         port="${http_port}"
-        maxHttpHeaderSize="${maxHttpHeaderSize}" maxPostSize="${maxPostSize}" maxParameterCount="${maxParameterCount}" />
+        maxHttpHeaderSize="${maxHttpHeaderSize}" maxPostSize="${maxPostSize}" maxParameterCount="${maxParameterCount}"
+        maxLocaleCount="30" /> <!-- certains utilisateurs ont un navigateur avec un header "Accept-Language" qui dépasse le nombre de locales max par défaut (10), limite créée en 2026/10  -->
 
     <Engine name="Catalina" defaultHost="localhost">
 
