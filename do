@@ -522,6 +522,7 @@ sub build {
     if (my $absolute_Dockerfile = readlink("$app/Dockerfile")) {
         $opts .= " -f $app/$absolute_Dockerfile";
     }
+    $opts .= " --build-arg $_" foreach map { chomp; $_ } read_file('/opt/dockers/.helpers/various/proxy.univ-paris1.fr.env');
     
     my $cmd = "docker build $opts -t $image $app/";
     log_($cmd);
